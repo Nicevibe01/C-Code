@@ -7,6 +7,8 @@ import {
   Instagram, MessageCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { supabase } from './lib/supabase';
+import Admin from './admin';
 
 /* ------------------------------------------------------------------ */
 /*  Tokens                                                              */
@@ -22,7 +24,12 @@ function useReveal(): [React.RefObject<HTMLDivElement | null>, boolean] {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setShown(true); io.disconnect(); } }, { threshold: 0.15 });
+    const io = new IntersectionObserver(([e]) => { 
+      if (e.isIntersecting) { 
+        setShown(true); 
+        io.disconnect(); 
+      } 
+    }, { threshold: 0.15 });
     io.observe(el);
     return () => io.disconnect();
   }, []);
@@ -32,12 +39,12 @@ function Reveal({ children, className = "", delay = 0 }: { children: ReactNode; 
   const [ref, shown] = useReveal();
   return (
     <div ref={ref} className={className} style={{
-      opacity: shown ? 1 : 0, transform: shown ? "translateY(0)" : "translateY(26px)",
+      opacity: shown ? 1 : 0,
+      transform: shown ? "translateY(0)" : "translateY(26px)",
       transition: `opacity .7s cubic-bezier(.16,1,.3,1) ${delay}ms, transform .7s cubic-bezier(.16,1,.3,1) ${delay}ms`,
     }}>{children}</div>
   );
 }
-
 function Eyebrow({ label, dark = true }: { label: string; dark?: boolean }) {
   return (
     <div className={`text-[12.5px] font-bold tracking-[0.16em] uppercase mb-3 ${dark ? "text-[#00B4D8]" : "text-[#1B3A5C]/60"}`}
@@ -243,7 +250,35 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
     return Object.keys(e).length === 0;
   };
   const handleContinue = () => { if (validate()) setStep(2); };
-  const handlePay = () => { setLoading(true); setTimeout(() => { setLoading(false); setStep(3); }, 1300); };
+ const handlePay = async () => {
+  setLoading(true);
+  
+  try {
+    // Save registration to Supabase
+    const { error } = await supabase
+      .from('registrations')
+      .insert([
+        {
+          name: form.name,
+          email: form.email,
+          password: form.password, // You should hash this in production!
+          phone: form.phone,
+          country: form.country,
+          event_title: event?.title || 'General Registration',
+          payment_status: 'completed'
+        }
+      ]);
+
+    if (error) throw error;
+    
+    setLoading(false);
+    setStep(3);
+  } catch (error) {
+    console.error('Registration error:', error);
+    setLoading(false);
+    alert('Registration failed. Please try again.');
+  }
+};
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -352,11 +387,10 @@ function EventCard({ ev, onRegister, delay }: { ev: EventType; onRegister: (ev: 
 /* ------------------------------------------------------------------ */
 
 export default function App() {
-  const [menuOpen, setMenuOpen] = useState(false);
+ const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  
-  const [modalEvent, setModalEvent] = useState<EventType | null>( null );
+  const [modalEvent, setModalEvent] = useState<EventType | null>(null);
   const [testiIdx, setTestiIdx] = useState(0);
 
   useEffect(() => {
@@ -364,15 +398,30 @@ export default function App() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-  useEffect(() => { const t = setInterval(() => setTestiIdx((i) => (i + 1) % TESTIMONIALS.length), 5000); return () => clearInterval(t); }, []);
+  
+  useEffect(() => { 
+    const t = setInterval(() => setTestiIdx((i) => (i + 1) % TESTIMONIALS.length), 5000); 
+    return () => clearInterval(t); 
+  }, []);
 
-  const scrollTo = (id: string) => { setMenuOpen(false); document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }); };
-const openRegister = (ev: EventType | null = null) => { 
-  setModalEvent(ev); 
-  setModalOpen(true); 
-};
+  const scrollTo = (id: string) => { 
+    setMenuOpen(false); 
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }); 
+  };
+  
+  const openRegister = (ev: EventType | null = null) => { 
+    setModalEvent(ev); 
+    setModalOpen(true); 
+  };
 
   const featured = EVENTS[0];
+
+  // ✅ ADMIN ROUTE CHECK - AFTER ALL HOOKS
+  if (window.location.pathname === '/admin') {
+    return <Admin />;
+  }
+
+  
 
   return (
     <div className="min-h-screen" style={{ fontFamily: "Inter, sans-serif", background: "#0A1628" }}>
