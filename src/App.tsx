@@ -337,11 +337,13 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
       setLoading(false);
       setStep(3);
       
-    } catch (error: unknown) {
-      console.error('❌ Registration error:', error);
-      alert('Registration failed. Please try again.');
-      setLoading(false);
-    }
+    } 
+    catch (error: unknown) {
+  console.error('❌ Registration error:', error);
+  const message = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+  alert(message);
+  setLoading(false);
+}
   };
 
   return (
