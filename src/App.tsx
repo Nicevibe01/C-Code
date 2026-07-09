@@ -389,11 +389,11 @@ export default function App() {
       </header>
 
       {/* HERO */}
-      <section id="home" className="relative overflow-hidden pt-20 pb-24 sm:pt-48 sm:pb-32" style={{ background: "radial-gradient(ellipse 100% 60% at 30% -10%, #1c3255 0%, #0A1628 55%, #060D18 100%)" }}>
+      <section id="home" className="relative overflow-hidden pt-20 pb-24 sm:pt-30 sm:pb-32" style={{ background: "radial-gradient(ellipse 100% 60% at 30% -10%, #1c3255 0%, #0A1628 55%, #060D18 100%)" }}>
         <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "100%", maskImage: "radial-gradient(ellipse 80% 60% at 50% 20%, black, transparent)" }} />
         <div className="max-w-[1200px] mx-auto px-5 sm:px-8 relative grid lg:grid-cols-[1.05fr_0.95fr] gap-16 items-center">
           <Reveal>
-            <div className="text-white/45 text-[13px] font-semibold tracking-[0.14em] uppercase mb-10" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Empowering builders worldwide</div>
+            <div className="text-white/45 text-[13px] font-semibold tracking-[0.14em] uppercase mb-5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Empowering builders worldwide</div>
             <h1 className="font-extrabold text-white leading-[1.02] tracking-tight" style={{ fontSize: "clamp(2.6rem, 7vw, 4.4rem)" }}>
               From Syntax.<br /><span style={{ background: "linear-gradient(120deg,#F5A623,#ffd27a)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>To Solution.</span>
             </h1>
@@ -454,7 +454,7 @@ export default function App() {
             <h2 className="text-white font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>The Community Program</h2>
             <p className="text-white/50 mt-3 max-w-[560px]">From skill-building to career launch, our initiatives are designed to equip you for success.</p>
           </Reveal>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12 ">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12 max-w-5xl mx-auto">
             {EVENTS.map((ev, i) => <EventCard key={ev.title} ev={ev} delay={i * 80} onRegister={openRegister} />)}
           </div>
           <Reveal delay={260} className="text-center mt-10">
