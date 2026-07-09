@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState} from "react";
 import type { ReactNode } from "react";
 import {
   Code2, Rocket, Trophy, Menu, X, ChevronRight, Check,
-  ArrowRight, Link2, Copy, Terminal, Calendar, Clock, Video, Globe2,
+  ArrowRight, Terminal, Calendar, Clock, Video, Globe2,
   GraduationCap, Sparkles, Mail, Lock, User, Phone, Twitter, Linkedin,
   Instagram, MessageCircle,
 } from "lucide-react";
@@ -78,10 +78,10 @@ function StatusPill({ status }: { status: string }) {
 /* ------------------------------------------------------------------ */
 
 const TERMINAL_LINES = [
-    { text: "diagnose--problem \"real-world problem solving\"", cls: "text-white/45 rounded-2xl p-2 border border-slate-600 mb-7" },
-  { text: "✓ syntax mastered", cls: "text-[#00B4D8] rounded-2xl p-2 border border-blue-600 m-2" },
-  { text: "✓ mvp shipped, revenue: live", cls: "text-[#22C55E] rounded-2xl p-2 border border-green-600 m-2" },
-  { text: "> status: ready for employers", cls: "text-[#F5A623] rounded-2xl p-2 border border-yellow-600 m-2" },
+    { text: "Diagnose--problem \"real-world problem solving\"", cls: "text-white/45 rounded-2xl p-2 border border-slate-600 mb-7" },
+  { text: "✓ Syntax Mastered", cls: "text-[#00B4D8] rounded-2xl p-2 border border-blue-600 m-2" },
+  { text: "✓ MVP Shipped, Revenue: live", cls: "text-[#22C55E] rounded-2xl p-2 border border-green-600 m-2" },
+  { text: "> Status: Ready for employers", cls: "text-[#F5A623] rounded-2xl p-2 border border-yellow-600 m-2" },
 ];
 function TerminalWindow() {
   const [lineIdx, setLineIdx] = useState(0);
@@ -163,9 +163,25 @@ const TESTIMONIALS = [
   { quote: "Felt harder than most technical interviews I've since passed — in a good way.", name: "Ifeanyi Umeh", role: "Competition finalist" },
 ];
 
-const PRICING_FEATURES = ["Full access to Crash Classes", "SASS Track training and resources", "Entry into the Competition", "Team collaboration opportunities", "Portfolio-building projects", "Professional feedback and recognition", "Direct Q&A with speakers"];
-const REFER_STEPS = [{ title: "Share your link", desc: "Every member gets a unique referral link the moment they join." }, { title: "Friends join", desc: "They enroll in The Boot Camp using your link." }, { title: "You earn", desc: "Rewards land automatically — no claim forms." }];
-const COUNTRIES = ["Nigeria", "Ghana", "Kenya", "South Africa", "United States", "United Kingdom", "Other"];
+const PRICING_FEATURES = [
+  "Full access to Crash Classes",
+  "SASS Track training and resources",
+  "Entry into the Competition",
+  "Team collaboration opportunities",
+  "Portfolio-building projects",
+  "Professional feedback and recognition",
+  "Direct Q&A with speakers"
+];
+
+const COUNTRIES = [
+  "Nigeria",
+  "Ghana",
+  "Kenya",
+  "South Africa",
+  "United States",
+  "United Kingdom",
+  "Other"
+];
 
 type EventType = {
   n: number;
@@ -270,7 +286,7 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
             </div>
             <Field label="Card Number"><input placeholder="4242 4242 4242 4242" className={inputCls()} /></Field>
             <div className="grid grid-cols-2 gap-4"><Field label="Expiry"><input placeholder="MM/YY" className={inputCls()} /></Field><Field label="CVC"><input placeholder="123" className={inputCls()} /></Field></div>
-            <p className="text-white/35 text-[12px]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>// placeholder gateway — Stripe/PayPal wired at launch</p>
+            <p className="text-white/35 text-[12px]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Secure payment powered by Stripe</p>
             <Btn variant="primary" className="w-full" onClick={handlePay} disabled={loading}>{loading ? "Processing…" : "Pay $3.99"}</Btn>
             <button onClick={() => setStep(1)} className="w-full text-center text-white/40 text-[13px] hover:text-white/70">Back</button>
           </div>
@@ -339,8 +355,8 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalEvent, setModalEvent] = useState<EventType | null>(null);
-  const [copied, setCopied] = useState(false);
+  
+  const [modalEvent, setModalEvent] = useState<EventType | null>( null );
   const [testiIdx, setTestiIdx] = useState(0);
 
   useEffect(() => {
@@ -351,8 +367,10 @@ export default function App() {
   useEffect(() => { const t = setInterval(() => setTestiIdx((i) => (i + 1) % TESTIMONIALS.length), 5000); return () => clearInterval(t); }, []);
 
   const scrollTo = (id: string) => { setMenuOpen(false); document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }); };
-  const openRegister = (ev: EventType | null = null) => { setModalEvent(ev); setModalOpen(true); };
-  const copyLink = useCallback(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); }, []);
+const openRegister = (ev: EventType | null = null) => { 
+  setModalEvent(ev); 
+  setModalOpen(true); 
+};
 
   const featured = EVENTS[0];
 
@@ -422,7 +440,7 @@ export default function App() {
           <Reveal>
             <Eyebrow label="Our Story" dark={false} />
             <h2 className="text-[#0A1628] font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>From Learner to Leader</h2>
-            <p className="text-[#14213D]/60 mt-5 leading-relaxed">The Community started as a small community sharing web development and security fundamentals to help learners move past tutorials.</p>
+            <p className="text-[#14213D]/60 mt-5 leading-relaxed  text-center lg:text-left">The Community started as a small community sharing web development and security fundamentals to help learners move past tutorials.</p>
             <p className="text-[#14213D]/60 mt-4 leading-relaxed">Seeing how much further our members grew when they shipped real work, not just exercises, inspired us to build a full program bridging education and real-world opportunity.</p>
             <div className="mt-7 pl-5 border-l-2" style={{ borderColor: "#F5A623" }}>
               <p className="text-[#0A1628] font-semibold text-[16px]">Inspiring builders who are ready to lead.</p>
@@ -452,11 +470,17 @@ export default function App() {
           <Reveal>
             <Eyebrow label="Our Initiatives" />
             <h2 className="text-white font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>The Community Program</h2>
-            <p className="text-white/50 mt-3 max-w-[560px]">From skill-building to career launch, our initiatives are designed to equip you for success.</p>
+            <p className="text-white/50 mt-3 max-w-[560px] mx-auto text-center">
+              From skill-building to career launch, our initiatives are designed to equip you for success.
+            </p>
           </Reveal>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12 max-w-5xl mx-auto">
-            {EVENTS.map((ev, i) => <EventCard key={ev.title} ev={ev} delay={i * 80} onRegister={openRegister} />)}
-          </div>
+          <div className="flex flex-wrap justify-center gap-6 mt-12">
+  {EVENTS.map((ev, i) => (
+    <div key={ev.title} className="flex-1 min-w-[280px] lg:max-w-[380px]">
+      <EventCard ev={ev} delay={i * 80} onRegister={openRegister} />
+    </div>
+  ))}
+</div>
           <Reveal delay={260} className="text-center mt-10">
             <button className="text-[#00B4D8] font-semibold text-[14.5px]">Explore all events →</button>
           </Reveal>
@@ -504,28 +528,33 @@ export default function App() {
       </section>
 
       {/* SPEAKERS */}
-      <section id="speakers" className="py-24 px-5 sm:px-8" style={{ background: "#F8F9FA" }}>
-        <div className="max-w-[1200px] mx-auto">
-          <Reveal>
-            <Eyebrow label="Faculty" dark={false} />
-            <h2 className="text-[#0A1628] font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>Learn from those who have built it</h2>
-            <p className="text-[#14213D]/55 mt-3 max-w-[560px]">We connect you with experienced founders, senior engineers, and tech leads.</p>
-          </Reveal>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-            {SPEAKERS.map((s, i) => (
-              <Reveal key={s.name} delay={i * 60}>
-                <div className="bg-white rounded-[22px] border border-[#1B3A5C]/8 p-6 hover:-translate-y-1.5 transition-all duration-400" style={{ boxShadow: "0 4px 20px rgba(10,22,40,0.04)" }}>
-                  <img src={s.img} alt={s.name} className="w-16 h-16 rounded-full object-cover border-2 border-[#F5A623]/30" loading="lazy" />
-                  <h3 className="text-[#0A1628] font-bold text-[16px] mt-4">{s.name}</h3>
-                  <p className="text-[#14213D]/50 text-[13.5px]">{s.role}</p>
-                  <div className="flex flex-wrap gap-1.5 mt-3">{s.tags.map((t) => <span key={t} className="text-[11.5px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "#00B4D815", color: "#00779b" }}>{t}</span>)}</div>
-                </div>
-              </Reveal>
-            ))}
+                {/* SPEAKERS */}
+<section id="speakers" className="py-24 px-5 sm:px-8" style={{ background: "#F8F9FA" }}>
+  <div className="max-w-[1200px] mx-auto">
+    <Reveal>
+      <Eyebrow label="Faculty" dark={false} />
+      <h2 className="text-[#0A1628] font-extrabold tracking-tight text-center" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>
+        Learn from those who have built it
+      </h2>
+      <p className="text-[#14213D]/55 mt-3 max-w-[560px] mx-auto text-center">
+        We connect you with experienced founders, senior engineers, and tech leads.
+      </p>
+    </Reveal>
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+      {/* ADD THIS: */}
+      {SPEAKERS.map((s, i) => (
+        <Reveal key={s.name} delay={i * 60}>
+          <div className="bg-white rounded-[22px] border border-[#1B3A5C]/8 p-6 hover:-translate-y-1.5 transition-all duration-400" style={{ boxShadow: "0 4px 20px rgba(10,22,40,0.04)" }}>
+            <img src={s.img} alt={s.name} className="w-16 h-16 rounded-full object-cover border-2 border-[#F5A623]/30" loading="lazy" />
+            <h3 className="text-[#0A1628] font-bold text-[16px] mt-4">{s.name}</h3>
+            <p className="text-[#14213D]/50 text-[13.5px]">{s.role}</p>
+            <div className="flex flex-wrap gap-1.5 mt-3">{s.tags.map((t) => <span key={t} className="text-[11.5px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "#00B4D815", color: "#00779b" }}>{t}</span>)}</div>
           </div>
-        </div>
-      </section>
-
+        </Reveal>
+      ))}
+    </div>
+  </div>
+</section>
       {/* PRICING */}
       <section id="pricing" className="py-24 px-5 sm:px-8" style={{ background: "#0A1628" }}>
         <div className="max-w-[560px] mx-auto text-center">
@@ -545,40 +574,53 @@ export default function App() {
       </section>
 
       {/* AFFILIATE */}
-      <section className="py-24 px-5 sm:px-8" style={{ background: "linear-gradient(135deg,#14213D,#0A1628)" }}>
-        <div className="max-w-[1200px] mx-auto grid lg:grid-cols-2 gap-16 items-center">
-          <Reveal>
-            <Eyebrow label="Referral Program" />
-            <h2 className="text-white font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>Refer &amp; earn</h2>
-            <p className="text-white/60 mt-3 max-w-[440px]">Share the opportunity. Earn rewards.</p>
-            <div className="space-y-4 mt-8">
-              {REFER_STEPS.map((s, i) => (
-                <div key={s.title} className="flex items-start gap-4 p-5 rounded-2xl bg-slate-900 border border-slate-500" style={{ boxShadow: "0 10px 30px rgba(00,00,00,0.04)" }}>
-                  <span className="font-mono text-[#F5A623] text-[13px] mt-0.5" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{`0${i + 1}`}</span>
-                  <div><div className="text-white font-semibold text-[15px]">{s.title}</div><div className="text-white/55 text-[14px]">{s.desc}</div></div>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-          <Reveal delay={100}>
-            <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-7">
-              <div className="text-white/45 text-[12.5px] uppercase tracking-wide font-semibold mb-4">Your referral dashboard</div>
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-white/[0.04] rounded-2xl p-4 border border-white/5"><div className="text-white font-extrabold text-[26px]">0</div><div className="text-white/45 text-[12.5px]">Referrals</div></div>
-                <div className="bg-white/[0.04] rounded-2xl p-4 border border-white/5"><div className="text-white font-extrabold text-[26px]">$0</div><div className="text-white/45 text-[12.5px]">Earned</div></div>
-              </div>
-              <div className="flex items-center gap-2 bg-[#0A1628] rounded-xl px-4 py-3 border border-white/10">
-                <Link2 size={15} className="text-white/40 flex-shrink-0" />
-                <span className="text-white/60 text-[13px] truncate flex-1" style={{ fontFamily: "'JetBrains Mono', monospace" }}>bootcamp.dev/r/join-now</span>
-                <button onClick={copyLink} className="text-[#F5A623] flex-shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center"><Copy size={15} /></button>
-              </div>
-              {copied && <p className="text-[#00B4D8] text-[12.5px] mt-2">Link copied</p>}
-              <Btn variant="teal" className="w-full mt-5" onClick={() => openRegister()}>Get Your Link</Btn>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+     {/* REFERRAL PROGRAM - Updated */}
+<section className="py-16 px-5 sm:px-8" style={{ background: "linear-gradient(135deg,#14213D,#0A1628)" }}>
+  <div className="max-w-[1200px] mx-auto">
+    <Reveal className="text-center">
+      <Eyebrow label="Referral Program" />
+      <h2 className="text-white font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>
+        Refer &amp; Earn
+      </h2>
+      <p className="text-white/60 mt-2">Share the opportunity. Earn rewards.</p>
+    </Reveal>
 
+    <div className="grid sm:grid-cols-2 gap-4 mt-10 max-w-4xl mx-auto">
+      {[
+        { num: "01", title: "Share the opportunity", desc: "Tell your friends about our community and programs." },
+        { num: "02", title: "Friend joins paid program", desc: "They enroll in any of our paid programs." },
+        { num: "03", title: "Friend joins the community", desc: "They become part of our growing network of builders." },
+        { num: "04", title: "DM the admin", desc: "Reach out at +234 706 892 3676 to claim your rewards." }
+      ].map((step, i) => (
+        <Reveal key={step.num} delay={i * 80}>
+          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all h-full">
+            <div className="flex items-start gap-3">
+              <span className="font-mono text-[#F5A623] text-[12px] font-bold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                {step.num}
+              </span>
+              <div className="text-left">
+                <div className="text-white font-semibold text-[14px]">{step.title}</div>
+                <div className="text-white/50 text-[13px] mt-0.5">{step.desc}</div>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      ))}
+    </div>
+
+    {/* Bonus: Invite 5 members get free program */}
+    <Reveal delay={320} className="text-center mt-8">
+      <div className="inline-block bg-gradient-to-r from-[#F5A623]/10 to-[#00B4D8]/10 border-2 border-[#F5A623]/30 rounded-2xl p-5 px-8">
+        <div className="flex items-center gap-2 justify-center">
+          <Trophy size={20} className="text-[#F5A623]" />
+          <span className="text-white font-bold">Invite 5 members → Get paid program FREE</span>
+          <Trophy size={20} className="text-[#F5A623]" />
+        </div>
+        <p className="text-white/40 text-[12px] mt-1">(5 members = 1 free paid program slot)</p>
+      </div>
+    </Reveal>
+  </div>
+</section>
       {/* TESTIMONIALS */}
       <section id="contact" className="py-24 px-5 sm:px-8" style={{ background: "#0A1628" }}>
         <div className="max-w-[680px] mx-auto text-center">
@@ -638,4 +680,4 @@ export default function App() {
       </footer>
     </div>
   );
-}
+  }
