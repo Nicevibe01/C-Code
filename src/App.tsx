@@ -225,19 +225,51 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
   const [form, setForm] = useState<RegistrationForm>({ name: "", email: "", password: "", confirm: "", phone: "", country: "", terms: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  
+  // ADD THESE TWO STATE VARIABLES
+  const [emailExists, setEmailExists] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  
   useEffect(() => {
     if (!open) {
       const t = setTimeout(() => {
         setStep(1);
         setForm({ name: "", email: "", password: "", confirm: "", phone: "", country: "", terms: false });
         setErrors({});
+        setEmailExists(false); // Reset email check
       }, 0);
       return () => clearTimeout(t);
     }
     return;
   }, [open]);
+  
   if (!open) return null;
+  
   const set = <K extends keyof RegistrationForm>(k: K, v: RegistrationForm[K]) => setForm((f) => ({ ...f, [k]: v } as RegistrationForm));
+  
+  // ADD THIS FUNCTION TO CHECK EMAIL
+  const checkEmail = async (email: string) => {
+    if (!email || !email.includes('@')) {
+      setEmailExists(false);
+      return;
+    }
+    
+    setCheckingEmail(true);
+    try {
+      const { data } = await supabase
+        .from('registrations')
+        .select('email')
+        .eq('email', email)
+        .single();
+      
+      setEmailExists(!!data);
+    } catch {
+      setEmailExists(false);
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
+  
   const validate = () => {
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = "Full name is required.";
@@ -249,36 +281,68 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
     setErrors(e);
     return Object.keys(e).length === 0;
   };
-  const handleContinue = () => { if (validate()) setStep(2); };
- const handlePay = async () => {
-  setLoading(true);
   
-  try {
-    // Save registration to Supabase
-    const { error } = await supabase
-      .from('registrations')
-      .insert([
-        {
-          name: form.name,
-          email: form.email,
-          password: form.password, // You should hash this in production!
-          phone: form.phone,
-          country: form.country,
-          event_title: event?.title || 'General Registration',
-          payment_status: 'completed'
-        }
-      ]);
-
-    if (error) throw error;
+  const handleContinue = () => { 
+    if (emailExists) {
+      alert('⚠️ This email is already registered. Please use a different email address.');
+      return;
+    }
+    if (validate()) setStep(2); 
+  };
+  
+  const handlePay = async () => {
+    setLoading(true);
     
-    setLoading(false);
-    setStep(3);
-  } catch (error) {
-    console.error('Registration error:', error);
-    setLoading(false);
-    alert('Registration failed. Please try again.');
-  }
-};
+    try {
+      // Check if email exists one more time before saving
+      const { data: existingUser } = await supabase
+        .from('registrations')
+        .select('email')
+        .eq('email', form.email)
+        .single();
+
+      if (existingUser) {
+        alert('⚠️ This email is already registered. Please use a different email address.');
+        setLoading(false);
+        return;
+      }
+
+      const registrationData = {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        phone: form.phone || '',
+        country: form.country,
+        event_title: event?.title || 'General Registration',
+        payment_status: 'completed'
+      };
+
+      console.log('📤 Registering new user:', registrationData.email);
+
+      const { data, error } = await supabase
+        .from('registrations')
+        .insert([registrationData])
+        .select();
+
+      if (error) {
+        if (error.code === '23505') {
+          alert('⚠️ This email is already registered. Please use a different email address.');
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
+
+      console.log('✅ Registration successful:', data);
+      setLoading(false);
+      setStep(3);
+      
+    } catch (error: unknown) {
+      console.error('❌ Registration error:', error);
+      alert('Registration failed. Please try again.');
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -288,6 +352,7 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
           <span className="text-white font-bold text-[15px]">{step === 1 && (event ? `Register — ${event.title}` : "Create your account")}{step === 2 && "Payment"}{step === 3 && "You're in"}</span>
           <button onClick={onClose} className="text-white/50 hover:text-white p-1 min-w-[32px] min-h-[32px] flex items-center justify-center"><X size={20} /></button>
         </div>
+        
         {step === 1 && (
           <div className="p-6 space-y-4">
             {event && (
@@ -296,42 +361,106 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
                 <div className="text-[13px] text-white/60">{event.date} · {event.format}</div>
               </div>
             )}
-            <Field icon={User} label="Full Name" error={errors.name}><input value={form.name} onChange={(e) => set("name", e.target.value)} autoComplete="name" placeholder="Adaeze Obi" className={inputCls(errors.name)} /></Field>
-            <Field icon={Mail} label="Email Address" error={errors.email}><input value={form.email} onChange={(e) => set("email", e.target.value)} type="email" autoComplete="email" placeholder="you@example.com" className={inputCls(errors.email)} /></Field>
-            <Field icon={Lock} label="Password" error={errors.password}><input value={form.password} onChange={(e) => set("password", e.target.value)} type="password" autoComplete="new-password" placeholder="At least 8 characters" className={inputCls(errors.password)} /></Field>
-            <Field icon={Lock} label="Confirm Password" error={errors.confirm}><input value={form.confirm} onChange={(e) => set("confirm", e.target.value)} type="password" autoComplete="new-password" placeholder="Repeat password" className={inputCls(errors.confirm)} /></Field>
-            <Field icon={Phone} label="Phone Number (optional)"><input value={form.phone} onChange={(e) => set("phone", e.target.value)} type="tel" autoComplete="tel" placeholder="+234 800 000 0000" className={inputCls()} /></Field>
+            
+            <Field icon={User} label="Full Name" error={errors.name}>
+              <input value={form.name} onChange={(e) => set("name", e.target.value)} autoComplete="name" placeholder="Adaeze Obi" className={inputCls(errors.name)} />
+            </Field>
+            
+            {/* EMAIL FIELD WITH CHECK */}
+            <Field icon={Mail} label="Email Address" error={errors.email}>
+              <input 
+                value={form.email} 
+                onChange={(e) => {
+                  set("email", e.target.value);
+                  checkEmail(e.target.value);
+                }} 
+                type="email" 
+                autoComplete="email" 
+                placeholder="you@example.com" 
+                className={inputCls(errors.email)} 
+              />
+              {emailExists && (
+                <p className="text-[#F5A623] text-[12.5px] mt-1">
+                  ⚠️ This email is already registered. Please use a different email.
+                </p>
+              )}
+              {checkingEmail && (
+                <p className="text-white/40 text-[12.5px] mt-1">
+                  Checking email...
+                </p>
+              )}
+            </Field>
+            
+            <Field icon={Lock} label="Password" error={errors.password}>
+              <input value={form.password} onChange={(e) => set("password", e.target.value)} type="password" autoComplete="new-password" placeholder="At least 8 characters" className={inputCls(errors.password)} />
+            </Field>
+            
+            <Field icon={Lock} label="Confirm Password" error={errors.confirm}>
+              <input value={form.confirm} onChange={(e) => set("confirm", e.target.value)} type="password" autoComplete="new-password" placeholder="Repeat password" className={inputCls(errors.confirm)} />
+            </Field>
+            
+            <Field icon={Phone} label="Phone Number (optional)">
+              <input value={form.phone} onChange={(e) => set("phone", e.target.value)} type="tel" autoComplete="tel" placeholder="+234 800 000 0000" className={inputCls()} />
+            </Field>
+            
             <Field label="Country" error={errors.country}>
               <select value={form.country} onChange={(e) => set("country", e.target.value)} className={inputCls(errors.country)}>
-                <option value="">Select country</option>{COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                <option value="">Select country</option>
+                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </Field>
+            
             <label className="flex items-start gap-3 pt-1 cursor-pointer">
               <input type="checkbox" checked={form.terms} onChange={(e) => set("terms", e.target.checked)} className="mt-1 w-4 h-4 accent-[#F5A623]" />
               <span className="text-[13px] text-white/60">I agree to the Terms of Service and Privacy Policy.</span>
             </label>
             {errors.terms && <p className="text-[#EF4444] text-[12.5px] -mt-3">{errors.terms}</p>}
-            <Btn variant="primary" className="w-full mt-2" onClick={handleContinue}>Continue to Payment <ArrowRight size={16} /></Btn>
+            
+            <Btn variant="primary" className="w-full mt-2" onClick={handleContinue}>
+              Continue to Payment <ArrowRight size={16} />
+            </Btn>
           </div>
         )}
+        
         {step === 2 && (
           <div className="p-6 space-y-5">
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 flex items-center justify-between">
-              <span className="text-white/60 text-[14px]">One-time payment</span><span className="text-white font-extrabold text-[22px]">$3.99</span>
+              <span className="text-white/60 text-[14px]">One-time payment</span>
+              <span className="text-white font-extrabold text-[22px]">$3.99</span>
             </div>
-            <Field label="Card Number"><input placeholder="4242 4242 4242 4242" className={inputCls()} /></Field>
-            <div className="grid grid-cols-2 gap-4"><Field label="Expiry"><input placeholder="MM/YY" className={inputCls()} /></Field><Field label="CVC"><input placeholder="123" className={inputCls()} /></Field></div>
-            <p className="text-white/35 text-[12px]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Secure payment powered by Stripe</p>
-            <Btn variant="primary" className="w-full" onClick={handlePay} disabled={loading}>{loading ? "Processing…" : "Pay $3.99"}</Btn>
-            <button onClick={() => setStep(1)} className="w-full text-center text-white/40 text-[13px] hover:text-white/70">Back</button>
+            <Field label="Card Number">
+              <input placeholder="4242 4242 4242 4242" className={inputCls()} />
+            </Field>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Expiry">
+                <input placeholder="MM/YY" className={inputCls()} />
+              </Field>
+              <Field label="CVC">
+                <input placeholder="123" className={inputCls()} />
+              </Field>
+            </div>
+            <p className="text-white/35 text-[12px]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              Secure payment powered by Stripe
+            </p>
+            <Btn variant="primary" className="w-full" onClick={handlePay} disabled={loading}>
+              {loading ? "Processing…" : "Pay $3.99"}
+            </Btn>
+            <button onClick={() => setStep(1)} className="w-full text-center text-white/40 text-[13px] hover:text-white/70">
+              Back
+            </button>
           </div>
         )}
+        
         {step === 3 && (
           <div className="p-8 text-center space-y-5">
-            <div className="w-16 h-16 rounded-full bg-[#22C55E]/15 border border-[#22C55E]/40 flex items-center justify-center mx-auto"><Check className="text-[#22C55E]" size={28} /></div>
+            <div className="w-16 h-16 rounded-full bg-[#22C55E]/15 border border-[#22C55E]/40 flex items-center justify-center mx-auto">
+              <Check className="text-[#22C55E]" size={28} />
+            </div>
             <div>
               <h3 className="text-white font-bold text-[20px]">You're registered</h3>
-              <p className="text-white/55 text-[14px] mt-2">{event ? `Google Meet joining details for ${event.title} are on their way to your inbox.` : "Check your email for access instructions."}</p>
+              <p className="text-white/55 text-[14px] mt-2">
+                {event ? `Google Meet joining details for ${event.title} are on their way to your inbox.` : "Check your email for access instructions."}
+              </p>
             </div>
             <Btn variant="teal" className="w-full" onClick={onClose}>Done</Btn>
           </div>
@@ -340,6 +469,7 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
     </div>
   );
 }
+ 
 
 /* ------------------------------------------------------------------ */
 /*  Event Card                                                          */

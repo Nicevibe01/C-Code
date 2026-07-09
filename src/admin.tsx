@@ -18,9 +18,15 @@ export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // ADD THIS - Loading state for login
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleLogin = async () => {
+    setIsLoggingIn(true); // Start loading
     try {
+      console.log('Attempting login with:', email);
+      
       const { data, error } = await supabase
         .from('admin_users')
         .select('*')
@@ -28,13 +34,23 @@ export default function Admin() {
         .eq('password', password)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Login error:', error);
+        throw error;
+      }
+      
       if (data) {
+        console.log('Login successful:', data);
         setIsAuthenticated(true);
         fetchRegistrations();
+      } else {
+        alert('Invalid credentials');
       }
-    } catch {
+    } catch (error) {
+      console.error('Login failed:', error);
       alert('Invalid credentials');
+    } finally {
+      setIsLoggingIn(false); // Stop loading
     }
   };
 
@@ -77,9 +93,10 @@ export default function Admin() {
             />
             <button
               onClick={handleLogin}
-              className="w-full bg-[#F5A623] text-[#0A1628] font-bold py-3 rounded-xl hover:bg-[#e0951e] transition-colors"
+              disabled={isLoggingIn}
+              className="w-full bg-[#F5A623] text-[#0A1628] font-bold py-3 rounded-xl hover:bg-[#e0951e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Login
+              {isLoggingIn ? 'Logging in...' : 'Login'}
             </button>
           </div>
         </div>
