@@ -3,7 +3,6 @@ import { supabase } from './lib/supabase';
 import { Trash2, Plus, Edit, Check, X, Calendar, Menu, X as XIcon, Users } from 'lucide-react';
 import AddEventModal from './addEventModal';
 import AddSpeakerModal from './AddSpeakerModal';
-import AddModal from './AddModal';
 
 interface Registration {
   id: number;
@@ -50,7 +49,6 @@ export default function Admin() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [showAddSpeaker, setShowAddSpeaker] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -326,14 +324,6 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ADD MODAL - CHOOSE EVENT OR SPEAKER */}
-      <AddModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSelectEvent={() => setShowAddEvent(true)}
-        onSelectSpeaker={() => setShowAddSpeaker(true)}
-      />
-
       {/* ADD EVENT MODAL */}
       <AddEventModal
         isOpen={showAddEvent}
@@ -368,10 +358,16 @@ export default function Admin() {
 
           <div className="hidden sm:flex gap-4 items-center flex-wrap">
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={() => setShowAddEvent(true)}
               className="bg-[#F5A623] text-[#0A1628] px-4 py-2 rounded-xl font-semibold flex items-center gap-2 hover:bg-[#e0951e] transition-colors whitespace-nowrap"
             >
-              <Plus size={18} /> Add New
+              <Plus size={18} /> Add Event
+            </button>
+            <button
+              onClick={() => setShowAddSpeaker(true)}
+              className="bg-[#00B4D8] text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-2 hover:bg-[#0099b8] transition-colors whitespace-nowrap"
+            >
+              <Users size={18} /> Add Speaker
             </button>
             <span className="text-white/60 text-sm">
               Total: {registrations.length} registrations
@@ -394,12 +390,21 @@ export default function Admin() {
           <div className="sm:hidden flex flex-col gap-3 bg-white/5 p-4 rounded-xl border border-white/10 mb-6">
             <button
               onClick={() => {
-                setShowAddModal(true);
+                setShowAddEvent(true);
                 setMobileMenuOpen(false);
               }}
               className="bg-[#F5A623] text-[#0A1628] px-4 py-2 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#e0951e] transition-colors"
             >
-              <Plus size={18} /> Add New
+              <Plus size={18} /> Add Event
+            </button>
+            <button
+              onClick={() => {
+                setShowAddSpeaker(true);
+                setMobileMenuOpen(false);
+              }}
+              className="bg-[#00B4D8] text-white px-4 py-2 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#0099b8] transition-colors"
+            >
+              <Users size={18} /> Add Speaker
             </button>
             <div className="text-white/60 text-sm text-center">
               Total: {registrations.length} registrations
@@ -489,7 +494,7 @@ export default function Admin() {
               <tbody>
                 {events.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-6 text-center text-white/40">No events yet. Click "Add New" to create one!</td>
+                    <td colSpan={5} className="p-6 text-center text-white/40">No events yet. Click "Add Event" to create one!</td>
                   </tr>
                 ) : (
                   events.map((ev) => (
@@ -557,7 +562,7 @@ export default function Admin() {
           {loadingSpeakers ? (
             <div className="text-center py-8 text-white/40">Loading members...</div>
           ) : speakers.length === 0 ? (
-            <div className="text-center py-8 text-white/40">No community members yet. Click "Add New" to add one!</div>
+            <div className="text-center py-8 text-white/40">No community members yet. Click "Add Speaker" to add one!</div>
           ) : (
             <>
               {/* Mobile Speaker Cards */}
