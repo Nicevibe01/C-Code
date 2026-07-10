@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from './lib/supabase';
-import { Trash2, Plus, Edit, Check, X, Calendar, Menu, X as XIcon, Users } from 'lucide-react';
+import { Trash2, Plus, Edit, Check, X, Calendar, Menu, Users } from 'lucide-react';
 import AddEventModal from './addEventModal';
 import AddSpeakerModal from './AddSpeakerModal';
 
