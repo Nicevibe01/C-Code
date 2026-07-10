@@ -8,7 +8,6 @@ interface AddSpeakerModalProps {
   onSpeakerAdded: () => void;
 }
 
-const COLORS = ['#F5A623', '#22C55E', '#00B4D8', '#EF4444', '#8B5CF6', '#EC4899'];
 
 export default function AddSpeakerModal({ isOpen, onClose, onSpeakerAdded }: AddSpeakerModalProps) {
   const [loading, setLoading] = useState(false);
