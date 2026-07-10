@@ -617,7 +617,7 @@ export default function App() {
             <h1 className="font-extrabold text-white leading-[1.02] tracking-tight" style={{ fontSize: "clamp(2.6rem, 7vw, 4.4rem)" }}>
               From Syntax.<br /><span style={{ background: "linear-gradient(120deg,#F5A623,#ffd27a)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>To Solution.</span>
             </h1>
-            <p className="text-white/55 mt-7 max-w-[500px] leading-relaxed text-[15px]">
+            <p className="text-white/55 mt-7 max-w-[500px] leading-relaxed text-[15px] justify-center">
               This Community is a movement that connects intermediate to advanced learners with experienced industry speakers through live, Virtual events, Competitions, Collaboration and more.
             </p>
             <div className="flex flex-wrap items-center gap-5 mt-9">

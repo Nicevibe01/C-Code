@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
-import { Trash2, Plus, Edit, Check, X, Calendar } from 'lucide-react';
+import { Trash2, Plus, Edit, Check, X, Calendar, Menu, X as XIcon } from 'lucide-react';
 import AddEventModal from './addEventModal';
 
 interface Registration {
@@ -39,6 +39,7 @@ export default function Admin() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
@@ -104,7 +105,6 @@ export default function Admin() {
     }
   };
 
-  // DELETE MEMBER FUNCTION
   const deleteRegistration = async (id: number, email: string) => {
     if (!confirm(`Are you sure you want to delete ${email}?`)) {
       return;
@@ -126,7 +126,6 @@ export default function Admin() {
     }
   };
 
-  // DELETE EVENT FUNCTION
   const deleteEvent = async (id: number, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) {
       return;
@@ -148,7 +147,6 @@ export default function Admin() {
     }
   };
 
-  // UPDATE EVENT STATUS FUNCTION
   const updateEventStatus = async (id: number, newStatus: string) => {
     try {
       const { error } = await supabase
@@ -168,14 +166,12 @@ export default function Admin() {
     }
   };
 
-  // SUCCESS TOAST
   const showSuccessToast = (message: string) => {
     setSuccessMessage(message);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
   };
 
-  // Edit Event Modal - Simple inline edit
   const startEditing = (event: Event) => {
     setEditingEvent(event);
   };
@@ -216,8 +212,8 @@ export default function Admin() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A1628]">
-        <div className="bg-white/[0.05] p-8 rounded-2xl border border-white/10 max-w-md w-full">
+      <div className="min-h-screen flex items-center justify-center bg-[#0A1628] p-4">
+        <div className="bg-white/[0.05] p-6 sm:p-8 rounded-2xl border border-white/10 max-w-md w-full">
           <h2 className="text-white text-2xl font-bold mb-6">Admin Login</h2>
           <div className="space-y-4">
             <input
@@ -225,14 +221,15 @@ export default function Admin() {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[#0A1628] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30"
+              className="w-full bg-[#0A1628] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#F5A623] transition-colors"
             />
             <input
               type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#0A1628] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30"
+              onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+              className="w-full bg-[#0A1628] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-[#F5A623] transition-colors"
             />
             <button
               onClick={handleLogin}
@@ -248,10 +245,10 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A1628] text-white p-8">
+    <div className="min-h-screen bg-[#0A1628] text-white p-4 sm:p-6 md:p-8">
       {/* SUCCESS TOAST */}
       {showSuccess && (
-        <div className="fixed top-4 right-4 z-[200] bg-[#22C55E]/20 border border-[#22C55E]/40 text-[#22C55E] px-6 py-3 rounded-xl backdrop-blur-md animate-in slide-in-from-top-5">
+        <div className="fixed top-4 right-4 z-[200] bg-[#22C55E]/20 border border-[#22C55E]/40 text-[#22C55E] px-4 sm:px-6 py-3 rounded-xl backdrop-blur-md animate-in slide-in-from-top-5 text-sm sm:text-base max-w-[90vw] sm:max-w-full">
           ✅ {successMessage}
         </div>
       )}
@@ -267,16 +264,27 @@ export default function Admin() {
       />
 
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <div className="flex gap-4 items-center">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
+          
+          {/* Mobile Menu Toggle */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="sm:hidden text-white/60 hover:text-white transition-colors"
+          >
+            {mobileMenuOpen ? <XIcon size={24} /> : <Menu size={24} />}
+          </button>
+
+          {/* Desktop Actions */}
+          <div className="hidden sm:flex gap-4 items-center flex-wrap">
             <button
               onClick={() => setShowAddEvent(true)}
-              className="bg-[#F5A623] text-[#0A1628] px-4 py-2 rounded-xl font-semibold flex items-center gap-2 hover:bg-[#e0951e] transition-colors"
+              className="bg-[#F5A623] text-[#0A1628] px-4 py-2 rounded-xl font-semibold flex items-center gap-2 hover:bg-[#e0951e] transition-colors whitespace-nowrap"
             >
               <Plus size={18} /> Add Event
             </button>
-            <span className="text-white/60">
+            <span className="text-white/60 text-sm">
               Total: {registrations.length} registrations
             </span>
             <button
@@ -285,20 +293,121 @@ export default function Admin() {
                 setRegistrations([]);
                 setEvents([]);
               }}
-              className="text-red-400 hover:text-red-300 transition-colors"
+              className="text-red-400 hover:text-red-300 transition-colors text-sm"
             >
               Logout
             </button>
           </div>
         </div>
 
+        {/* Mobile Actions */}
+        {mobileMenuOpen && (
+          <div className="sm:hidden flex flex-col gap-3 bg-white/5 p-4 rounded-xl border border-white/10 mb-6">
+            <button
+              onClick={() => {
+                setShowAddEvent(true);
+                setMobileMenuOpen(false);
+              }}
+              className="bg-[#F5A623] text-[#0A1628] px-4 py-2 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#e0951e] transition-colors"
+            >
+              <Plus size={18} /> Add Event
+            </button>
+            <div className="text-white/60 text-sm text-center">
+              Total: {registrations.length} registrations
+            </div>
+            <button
+              onClick={() => {
+                setIsAuthenticated(false);
+                setRegistrations([]);
+                setEvents([]);
+              }}
+              className="text-red-400 hover:text-red-300 transition-colors text-center"
+            >
+              Logout
+            </button>
+          </div>
+        )}
+
         {/* EVENTS SECTION */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <Calendar size={24} className="text-[#F5A623]" />
+        <div className="mb-8 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 flex items-center gap-2">
+            <Calendar size={20} className="text-[#F5A623]" />
             Events ({events.length})
           </h2>
-          <div className="overflow-x-auto">
+          
+          {/* Mobile Event Cards */}
+          <div className="sm:hidden space-y-4">
+            {events.map((ev) => (
+              <div key={ev.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-white/40 text-sm">#{ev.n}</span>
+                  <StatusPill status={ev.status} />
+                </div>
+                <div className="mb-2">
+                  {editingEvent?.id === ev.id ? (
+                    <input
+                      value={editingEvent.title}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
+                      className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white w-full"
+                    />
+                  ) : (
+                    <span style={{ color: ev.color }} className="font-medium">
+                      {ev.title}
+                    </span>
+                  )}
+                </div>
+                <div className="text-white/60 text-sm mb-3">{ev.date}</div>
+                <div className="flex gap-2 flex-wrap">
+                  {editingEvent?.id === ev.id ? (
+                    <>
+                      <button
+                        onClick={saveEventEdit}
+                        className="text-green-400 hover:text-green-300 p-1 flex-1 bg-green-500/10 rounded-lg justify-center flex items-center gap-1"
+                      >
+                        <Check size={16} /> Save
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        className="text-red-400 hover:text-red-300 p-1 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"
+                      >
+                        <X size={16} /> Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => startEditing(ev)}
+                        className="text-blue-400 hover:text-blue-300 p-2 flex-1 bg-blue-500/10 rounded-lg justify-center flex items-center gap-1"
+                      >
+                        <Edit size={16} /> Edit
+                      </button>
+                      <button
+                        onClick={() => deleteEvent(ev.id, ev.title)}
+                        className="text-red-400 hover:text-red-300 p-2 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"
+                      >
+                        <Trash2 size={16} /> Delete
+                      </button>
+                      <select
+                        onChange={(e) => updateEventStatus(ev.id, e.target.value)}
+                        value=""
+                        className="flex-1 bg-[#0A1628] border border-white/10 rounded-lg px-2 py-1 text-white text-xs"
+                      >
+                        <option value="">Quick Status</option>
+                        <option value="Upcoming">Upcoming</option>
+                        <option value="Open for Registration">Open for Registration</option>
+                        <option value="Coming Soon">Coming Soon</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Event Table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full border border-white/10 rounded-xl overflow-hidden">
               <thead className="bg-white/5">
                 <tr>
@@ -402,62 +511,100 @@ export default function Admin() {
 
         {/* REGISTRATIONS SECTION */}
         <div>
-          <h2 className="text-2xl font-bold mb-4">Registrations ({registrations.length})</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">
+            Registrations ({registrations.length})
+          </h2>
+          
           {loading ? (
             <div className="text-center py-12 text-white/60">Loading registrations...</div>
           ) : registrations.length === 0 ? (
             <div className="text-center py-12 text-white/40">No registrations yet.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border border-white/10 rounded-xl overflow-hidden">
-                <thead className="bg-white/5">
-                  <tr>
-                    <th className="p-4 text-left">#</th>
-                    <th className="p-4 text-left">Name</th>
-                    <th className="p-4 text-left">Email</th>
-                    <th className="p-4 text-left">Phone</th>
-                    <th className="p-4 text-left">Country</th>
-                    <th className="p-4 text-left">Event</th>
-                    <th className="p-4 text-left">Date</th>
-                    <th className="p-4 text-left">Status</th>
-                    <th className="p-4 text-left">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {registrations.map((reg, index) => (
-                    <tr key={reg.id} className="border-t border-white/5 hover:bg-white/5 transition-colors">
-                      <td className="p-4">{index + 1}</td>
-                      <td className="p-4 font-medium">{reg.name}</td>
-                      <td className="p-4 text-white/70">{reg.email}</td>
-                      <td className="p-4 text-white/70">{reg.phone || '-'}</td>
-                      <td className="p-4 text-white/70">{reg.country}</td>
-                      <td className="p-4 text-white/70">{reg.event_title}</td>
-                      <td className="p-4 text-white/70">
-                        {new Date(reg.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="p-4">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          reg.payment_status === 'completed' 
-                            ? 'bg-green-500/20 text-green-400' 
-                            : 'bg-yellow-500/20 text-yellow-400'
-                        }`}>
-                          {reg.payment_status}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <button
-                          onClick={() => deleteRegistration(reg.id, reg.email)}
-                          className="text-red-400 hover:text-red-300 transition-colors p-1 rounded hover:bg-red-500/10"
-                          title="Delete member"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
+            <>
+              {/* Mobile Registration Cards */}
+              <div className="sm:hidden space-y-4">
+                {registrations.map((reg, index) => (
+                  <div key={reg.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-white/40 text-sm">#{index + 1}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        reg.payment_status === 'completed' 
+                          ? 'bg-green-500/20 text-green-400' 
+                          : 'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {reg.payment_status}
+                      </span>
+                    </div>
+                    <div className="font-medium mb-1">{reg.name}</div>
+                    <div className="text-white/60 text-sm">{reg.email}</div>
+                    <div className="text-white/60 text-sm">{reg.phone || '-'}</div>
+                    <div className="text-white/60 text-sm">{reg.country}</div>
+                    <div className="text-white/60 text-sm">{reg.event_title}</div>
+                    <div className="text-white/40 text-xs mt-1">
+                      {new Date(reg.created_at).toLocaleDateString()}
+                    </div>
+                    <button
+                      onClick={() => deleteRegistration(reg.id, reg.email)}
+                      className="mt-3 w-full text-red-400 hover:text-red-300 transition-colors p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center gap-2"
+                    >
+                      <Trash2 size={16} /> Delete Member
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Registration Table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full border border-white/10 rounded-xl overflow-hidden">
+                  <thead className="bg-white/5">
+                    <tr>
+                      <th className="p-4 text-left">#</th>
+                      <th className="p-4 text-left">Name</th>
+                      <th className="p-4 text-left">Email</th>
+                      <th className="p-4 text-left hidden md:table-cell">Phone</th>
+                      <th className="p-4 text-left hidden lg:table-cell">Country</th>
+                      <th className="p-4 text-left hidden xl:table-cell">Event</th>
+                      <th className="p-4 text-left hidden lg:table-cell">Date</th>
+                      <th className="p-4 text-left">Status</th>
+                      <th className="p-4 text-left">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {registrations.map((reg, index) => (
+                      <tr key={reg.id} className="border-t border-white/5 hover:bg-white/5 transition-colors">
+                        <td className="p-4">{index + 1}</td>
+                        <td className="p-4 font-medium">{reg.name}</td>
+                        <td className="p-4 text-white/70 text-sm">{reg.email}</td>
+                        <td className="p-4 text-white/70 hidden md:table-cell">{reg.phone || '-'}</td>
+                        <td className="p-4 text-white/70 hidden lg:table-cell">{reg.country}</td>
+                        <td className="p-4 text-white/70 hidden xl:table-cell">{reg.event_title}</td>
+                        <td className="p-4 text-white/70 hidden lg:table-cell">
+                          {new Date(reg.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            reg.payment_status === 'completed' 
+                              ? 'bg-green-500/20 text-green-400' 
+                              : 'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            {reg.payment_status}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <button
+                            onClick={() => deleteRegistration(reg.id, reg.email)}
+                            className="text-red-400 hover:text-red-300 transition-colors p-1 rounded hover:bg-red-500/10"
+                            title="Delete member"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
