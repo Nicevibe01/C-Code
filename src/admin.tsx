@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { supabase } from './lib/supabase';
+import { Trash2, Plus } from 'lucide-react';
+import AddEventModal from './addEventModal';
 
 interface Registration {
   id: number;
@@ -18,12 +20,11 @@ export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // ADD THIS - Loading state for login
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showAddEvent, setShowAddEvent] = useState(false);
 
   const handleLogin = async () => {
-    setIsLoggingIn(true); // Start loading
+    setIsLoggingIn(true);
     try {
       console.log('Attempting login with:', email);
       
@@ -50,7 +51,7 @@ export default function Admin() {
       console.error('Login failed:', error);
       alert('Invalid credentials');
     } finally {
-      setIsLoggingIn(false); // Stop loading
+      setIsLoggingIn(false);
     }
   };
 
@@ -68,6 +69,27 @@ export default function Admin() {
       console.error('Error fetching registrations:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteRegistration = async (id: number, email: string) => {
+    if (!confirm(`Are you sure you want to delete ${email}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('registrations')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setRegistrations(registrations.filter(reg => reg.id !== id));
+      alert('Member deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      alert('Failed to delete member. Please try again.');
     }
   };
 
@@ -106,10 +128,27 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-[#0A1628] text-white p-8">
+      {/* ✅ ADD THE MODAL HERE */}
+      <AddEventModal
+        isOpen={showAddEvent}
+        onClose={() => setShowAddEvent(false)}
+        onEventAdded={() => {
+          console.log('Event added successfully!');
+          // Optional: Refresh the page to show new events
+          // window.location.reload();
+        }}
+      />
+
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
           <div className="flex gap-4 items-center">
+            <button
+              onClick={() => setShowAddEvent(true)}
+              className="bg-[#F5A623] text-[#0A1628] px-4 py-2 rounded-xl font-semibold flex items-center gap-2 hover:bg-[#e0951e] transition-colors"
+            >
+              <Plus size={18} /> Add Event
+            </button>
             <span className="text-white/60">
               Total: {registrations.length} registrations
             </span>
@@ -142,6 +181,7 @@ export default function Admin() {
                   <th className="p-4 text-left">Event</th>
                   <th className="p-4 text-left">Date</th>
                   <th className="p-4 text-left">Status</th>
+                  <th className="p-4 text-left">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -164,6 +204,15 @@ export default function Admin() {
                       }`}>
                         {reg.payment_status}
                       </span>
+                    </td>
+                    <td className="p-4">
+                      <button
+                        onClick={() => deleteRegistration(reg.id, reg.email)}
+                        className="text-red-400 hover:text-red-300 transition-colors p-1 rounded hover:bg-red-500/10"
+                        title="Delete member"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </td>
                   </tr>
                 ))}

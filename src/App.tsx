@@ -191,6 +191,7 @@ const COUNTRIES = [
 ];
 
 type EventType = {
+  id?: number;  // ← ADD THIS
   n: number;
   status: string;
   title: string;
@@ -518,13 +519,26 @@ function EventCard({ ev, onRegister, delay }: { ev: EventType; onRegister: (ev: 
 /*  Main App                                                            */
 /* ------------------------------------------------------------------ */
 
-export default function App() {
- const [menuOpen, setMenuOpen] = useState(false);
+
+
+  // ========== FUNCTIONS ==========
+  export default function App() {
+  // ... state declarations ...
+
+   // ============================================================
+  // 1. ALL useState hooks FIRST (BEFORE any conditional returns)
+  // ============================================================
+  const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEvent, setModalEvent] = useState<EventType | null>(null);
   const [testiIdx, setTestiIdx] = useState(0);
+  const [events, setEvents] = useState<EventType[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(true);
 
+  // ============================================================
+  // 2. ALL useEffect hooks SECOND
+  // ============================================================
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     window.addEventListener("scroll", onScroll);
@@ -535,6 +549,75 @@ export default function App() {
     const t = setInterval(() => setTestiIdx((i) => (i + 1) % TESTIMONIALS.length), 5000); 
     return () => clearInterval(t); 
   }, []);
+// Fetch events from Supabase
+useEffect(() => {
+  let isMounted = true;
+
+  const loadEvents = async () => {
+    setLoadingEvents(true);
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('n', { ascending: true });
+
+      if (error) throw error;
+      
+      if (isMounted) {
+        setEvents(data || []);
+        setLoadingEvents(false);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      if (isMounted) {
+        setEvents(EVENTS);
+        setLoadingEvents(false);
+      }
+    }
+  };
+
+  loadEvents();
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
+  // ============================================================
+  // 3. DEFINE FUNCTIONS
+  // ============================================================
+ // Fetch events from Supabase
+useEffect(() => {
+  let isMounted = true;
+
+  const loadEvents = async () => {
+    setLoadingEvents(true);
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('n', { ascending: true });
+
+      if (error) throw error;
+      
+      if (isMounted) {
+        setEvents(data || []);
+        setLoadingEvents(false);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      if (isMounted) {
+        setEvents(EVENTS);
+        setLoadingEvents(false);
+      }
+    }
+  };
+
+  loadEvents();
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
 
   const scrollTo = (id: string) => { 
     setMenuOpen(false); 
@@ -546,14 +629,21 @@ export default function App() {
     setModalOpen(true); 
   };
 
-  const featured = EVENTS[0];
+  // ============================================================
+  // 4. CALL fetchEvents IN useEffect
+  // ============================================================
 
-  // ✅ ADMIN ROUTE CHECK - AFTER ALL HOOKS
+  // ============================================================
+  // 5. ADMIN ROUTE CHECK - AFTER ALL HOOKS
+  // ============================================================
   if (window.location.pathname === '/admin') {
     return <Admin />;
   }
 
-  
+  // ============================================================
+  // 6. FEATURED EVENT
+  // ============================================================
+  const featured = events.length > 0 ? events[0] : EVENTS[0];
 
   return (
     <div className="min-h-screen" style={{ fontFamily: "Inter, sans-serif", background: "#0A1628" }}>
@@ -646,28 +736,39 @@ export default function App() {
       </section>
 
       {/* PROGRAMS THAT TRANSFORM — event cards */}
-      <section id="events" className="py-24 px-5 sm:px-8" style={{ background: "#0A1628" }}>
-        <div className="max-w-[1200px] mx-auto">
-          <Reveal>
-            <Eyebrow label="Our Initiatives" />
-            <h2 className="text-white font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>The Community Program</h2>
-            <p className="text-white/50 mt-3 max-w-[560px] mx-auto text-center">
-              From skill-building to career launch, our initiatives are designed to equip you for success.
-            </p>
-          </Reveal>
-          <div className="flex flex-wrap justify-center gap-6 mt-12">
-  {EVENTS.map((ev, i) => (
-    <div key={ev.title} className="flex-1 min-w-[280px] lg:max-w-[380px]">
-      <EventCard ev={ev} delay={i * 80} onRegister={openRegister} />
+     {/* PROGRAMS THAT TRANSFORM — event cards */}
+<section id="events" className="py-24 px-5 sm:px-8" style={{ background: "#0A1628" }}>
+  <div className="max-w-[1200px] mx-auto">
+    <Reveal>
+      <Eyebrow label="Our Initiatives" />
+      <h2 className="text-white font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>
+        The Community Program
+      </h2>
+      <p className="text-white/50 mt-3 max-w-[560px] mx-auto text-center">
+        From skill-building to career launch, our initiatives are designed to equip you for success.
+      </p>
+    </Reveal>
+    
+    {/* ✅ REPLACED WITH THIS: */}
+    <div className="flex flex-wrap justify-center gap-6 mt-12">
+      {loadingEvents ? (
+        <div className="text-white/40 text-center py-12 w-full">Loading events...</div>
+      ) : events.length === 0 ? (
+        <div className="text-white/40 text-center py-12 w-full">No events yet. Check back soon!</div>
+      ) : (
+        events.map((ev, i) => (
+          <div key={ev.id || ev.n || ev.title} className="flex-1 min-w-[280px] lg:max-w-[380px]">
+            <EventCard ev={ev} delay={i * 80} onRegister={openRegister} />
+          </div>
+        ))
+      )}
     </div>
-  ))}
-</div>
-          <Reveal delay={260} className="text-center mt-10">
-            <button className="text-[#00B4D8] font-semibold text-[14.5px]">Explore all events →</button>
-          </Reveal>
-        </div>
-      </section>
-
+    
+    <Reveal delay={260} className="text-center mt-10">
+      <button className="text-[#00B4D8] font-semibold text-[14.5px]">Explore all events →</button>
+    </Reveal>
+  </div>
+</section>
       {/* CHOOSE YOUR PATH — stats + featured spotlight */}
       <section className="py-24 px-5 sm:px-8" style={{ background: "linear-gradient(135deg,#14213D,#0A1628)" }}>
         <div className="max-w-[1200px] mx-auto">
