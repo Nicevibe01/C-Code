@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { supabase } from './lib/supabase';
 import { Trash2, Plus, Edit, Check, X, Calendar, Menu, X as XIcon, Users } from 'lucide-react';
 import AddEventModal from './addEventModal';
+import AddSpeakerModal from './addSpeakerModal';
+import AddModal from './AddModal';
 
 interface Registration {
   id: number;
@@ -47,6 +49,8 @@ export default function Admin() {
   const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showAddEvent, setShowAddEvent] = useState(false);
+  const [showAddSpeaker, setShowAddSpeaker] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -322,6 +326,14 @@ export default function Admin() {
         </div>
       )}
 
+      {/* ADD MODAL - CHOOSE EVENT OR SPEAKER */}
+      <AddModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSelectEvent={() => setShowAddEvent(true)}
+        onSelectSpeaker={() => setShowAddSpeaker(true)}
+      />
+
       {/* ADD EVENT MODAL */}
       <AddEventModal
         isOpen={showAddEvent}
@@ -329,6 +341,16 @@ export default function Admin() {
         onEventAdded={() => {
           fetchEvents();
           showSuccessToast('Event added successfully!');
+        }}
+      />
+
+      {/* ADD SPEAKER MODAL */}
+      <AddSpeakerModal
+        isOpen={showAddSpeaker}
+        onClose={() => setShowAddSpeaker(false)}
+        onSpeakerAdded={() => {
+          fetchSpeakers();
+          showSuccessToast('Speaker added successfully!');
         }}
       />
 
@@ -346,10 +368,10 @@ export default function Admin() {
 
           <div className="hidden sm:flex gap-4 items-center flex-wrap">
             <button
-              onClick={() => setShowAddEvent(true)}
+              onClick={() => setShowAddModal(true)}
               className="bg-[#F5A623] text-[#0A1628] px-4 py-2 rounded-xl font-semibold flex items-center gap-2 hover:bg-[#e0951e] transition-colors whitespace-nowrap"
             >
-              <Plus size={18} /> Add Event
+              <Plus size={18} /> Add New
             </button>
             <span className="text-white/60 text-sm">
               Total: {registrations.length} registrations
@@ -372,12 +394,12 @@ export default function Admin() {
           <div className="sm:hidden flex flex-col gap-3 bg-white/5 p-4 rounded-xl border border-white/10 mb-6">
             <button
               onClick={() => {
-                setShowAddEvent(true);
+                setShowAddModal(true);
                 setMobileMenuOpen(false);
               }}
               className="bg-[#F5A623] text-[#0A1628] px-4 py-2 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#e0951e] transition-colors"
             >
-              <Plus size={18} /> Add Event
+              <Plus size={18} /> Add New
             </button>
             <div className="text-white/60 text-sm text-center">
               Total: {registrations.length} registrations
