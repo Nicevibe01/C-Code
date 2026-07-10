@@ -345,61 +345,33 @@ export default function Admin() {
       />
 
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-       <div className="flex justify-between items-center mb-6 sm:mb-8">
-  <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
-  
-  <div className="flex items-center gap-2">
-    <button
-      onClick={() => setShowAddEvent(true)}
-      className="bg-[#F5A623] text-[#0A1628] px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-semibold flex items-center gap-1 sm:gap-2 hover:bg-[#e0951e] transition-colors text-xs sm:text-sm"
-    >
-      <Plus size={14} /> Add
-    </button>
-    <button
-      onClick={() => setShowAddSpeaker(true)}
-      className="bg-[#00B4D8] text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-semibold flex items-center gap-1 sm:gap-2 hover:bg-[#0099b8] transition-colors text-xs sm:text-sm"
-    >
-      <Users size={14} /> Add
-    </button>
-    <button
-      onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-      className="text-white/60 hover:text-white transition-colors p-1"
-    >
-      {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-    </button>
-  </div>
-</div>
-          <div className="hidden sm:flex gap-4 items-center flex-wrap">
+        {/* HEADER - Mobile & Desktop (ONE HEADER ONLY) */}
+        <div className="flex justify-between items-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
+          
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setShowAddEvent(true)}
-              className="bg-[#F5A623] text-[#0A1628] px-4 py-2 rounded-xl font-semibold flex items-center gap-2 hover:bg-[#e0951e] transition-colors whitespace-nowrap"
+              className="bg-[#F5A623] text-[#0A1628] px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-semibold flex items-center gap-1 sm:gap-2 hover:bg-[#e0951e] transition-colors text-xs sm:text-sm"
             >
-              <Plus size={18} /> Add Event
+              <Plus size={14} /> Add
             </button>
             <button
               onClick={() => setShowAddSpeaker(true)}
-              className="bg-[#00B4D8] text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-2 hover:bg-[#0099b8] transition-colors whitespace-nowrap"
+              className="bg-[#00B4D8] text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-semibold flex items-center gap-1 sm:gap-2 hover:bg-[#0099b8] transition-colors text-xs sm:text-sm"
             >
-              <Users size={18} /> Add Speaker
+              <Users size={14} /> Add
             </button>
-            <span className="text-white/60 text-sm">
-              Total: {registrations.length} registrations
-            </span>
             <button
-              onClick={() => {
-                setIsAuthenticated(false);
-                setRegistrations([]);
-                setEvents([]);
-                setSpeakers([]);
-              }}
-              className="text-red-400 hover:text-red-300 transition-colors text-sm"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-white/60 hover:text-white transition-colors p-1"
             >
-              Logout
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
 
+        {/* MOBILE MENU */}
         {mobileMenuOpen && (
           <div className="sm:hidden flex flex-col gap-3 bg-white/5 p-4 rounded-xl border border-white/10 mb-6">
             <button
@@ -444,18 +416,18 @@ export default function Admin() {
             Events ({events.length})
           </h2>
           
-          {/* Mobile Event Cards */}
+          {/* Mobile Event Cards - Left Aligned */}
           <div className="sm:hidden space-y-4">
             {events.length === 0 ? (
               <div className="text-white/40 text-center py-4">No events yet. Add one!</div>
             ) : (
               events.map((ev) => (
-                <div key={ev.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div key={ev.id} className="bg-white/5 border border-white/10 rounded-xl p-4 text-left">
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-white/40 text-sm">#{ev.n}</span>
                     <StatusPill status={ev.status} />
                   </div>
-                  <div className="mb-2">
+                  <div className="mb-1">
                     {editingEvent?.id === ev.id ? (
                       <input
                         value={editingEvent.title}
@@ -467,22 +439,22 @@ export default function Admin() {
                     )}
                   </div>
                   <div className="text-white/60 text-sm mb-3">{ev.date}</div>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex flex-wrap gap-2">
                     {editingEvent?.id === ev.id ? (
                       <>
-                        <button onClick={saveEventEdit} className="text-green-400 hover:text-green-300 p-1 flex-1 bg-green-500/10 rounded-lg justify-center flex items-center gap-1"><Check size={16} /> Save</button>
-                        <button onClick={cancelEditing} className="text-red-400 hover:text-red-300 p-1 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"><X size={16} /> Cancel</button>
+                        <button onClick={saveEventEdit} className="text-green-400 hover:text-green-300 p-1 flex-1 bg-green-500/10 rounded-lg justify-center flex items-center gap-1 text-xs"><Check size={14} /> Save</button>
+                        <button onClick={cancelEditing} className="text-red-400 hover:text-red-300 p-1 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1 text-xs"><X size={14} /> Cancel</button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => startEditing(ev)} className="text-blue-400 hover:text-blue-300 p-2 flex-1 bg-blue-500/10 rounded-lg justify-center flex items-center gap-1"><Edit size={16} /> Edit</button>
-                        <button onClick={() => deleteEvent(ev.id, ev.title)} className="text-red-400 hover:text-red-300 p-2 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"><Trash2 size={16} /> Delete</button>
+                        <button onClick={() => startEditing(ev)} className="text-blue-400 hover:text-blue-300 p-1 flex-1 bg-blue-500/10 rounded-lg justify-center flex items-center gap-1 text-xs"><Edit size={14} /> Edit</button>
+                        <button onClick={() => deleteEvent(ev.id, ev.title)} className="text-red-400 hover:text-red-300 p-1 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1 text-xs"><Trash2 size={14} /> Delete</button>
                         <select onChange={(e) => updateEventStatus(ev.id, e.target.value)} value="" className="flex-1 bg-[#0A1628] border border-white/10 rounded-lg px-2 py-1 text-white text-xs">
-                          <option value="">Quick Status</option>
+                          <option value="">Status</option>
                           <option value="Upcoming">Upcoming</option>
-                          <option value="Open for Registration">Open for Registration</option>
-                          <option value="Coming Soon">Coming Soon</option>
-                          <option value="Completed">Completed</option>
+                          <option value="Open for Registration">Open</option>
+                          <option value="Coming Soon">Soon</option>
+                          <option value="Completed">Done</option>
                           <option value="Cancelled">Cancelled</option>
                         </select>
                       </>
@@ -508,7 +480,7 @@ export default function Admin() {
               <tbody>
                 {events.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-6 text-center text-white/40">No events yet. Click "Add Event" to create one!</td>
+                    <td colSpan={5} className="p-6 text-center text-white/40">No events yet. Click "Add" to create one!</td>
                   </tr>
                 ) : (
                   events.map((ev) => (
@@ -576,13 +548,13 @@ export default function Admin() {
           {loadingSpeakers ? (
             <div className="text-center py-8 text-white/40">Loading members...</div>
           ) : speakers.length === 0 ? (
-            <div className="text-center py-8 text-white/40">No community members yet. Click "Add Speaker" to add one!</div>
+            <div className="text-center py-8 text-white/40">No community members yet. Click "Add" to add one!</div>
           ) : (
             <>
-              {/* Mobile Speaker Cards */}
+              {/* Mobile Speaker Cards - Left Aligned */}
               <div className="sm:hidden space-y-4">
                 {speakers.map((s) => (
-                  <div key={s.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div key={s.id} className="bg-white/5 border border-white/10 rounded-xl p-4 text-left">
                     <div className="flex items-center gap-3 mb-2">
                       <img src={s.image} alt={s.name} className="w-12 h-12 rounded-full object-cover" />
                       <div>
