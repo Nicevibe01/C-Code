@@ -19,7 +19,7 @@ export default function AddEventModal({ isOpen, onClose, onEventAdded }: AddEven
     status: 'Upcoming',
     title: '',
     tag: '',
-    description: '',  // ← Changed from 'desc'
+    description: '',
     date: '',
     time: '',
     format: 'Virtual (Google Meet)',
@@ -31,7 +31,6 @@ export default function AddEventModal({ isOpen, onClose, onEventAdded }: AddEven
     setLoading(true);
 
     try {
-      // Get the next number
       const { data: events } = await supabase
         .from('events')
         .select('n')
@@ -47,7 +46,7 @@ export default function AddEventModal({ isOpen, onClose, onEventAdded }: AddEven
           status: form.status,
           title: form.title,
           tag: form.tag || null,
-          description: form.description,  // ← Changed from desc
+          description: form.description,
           date: form.date,
           time: form.time,
           format: form.format,
@@ -59,15 +58,14 @@ export default function AddEventModal({ isOpen, onClose, onEventAdded }: AddEven
         throw error;
       }
 
-      alert('Event added successfully!');
       onEventAdded();
-      onClose();
+      onClose();  // ← Fixed: was onClick
       setForm({
         n: 0,
         status: 'Upcoming',
         title: '',
         tag: '',
-        description: '',  // ← Changed from 'desc'
+        description: '',
         date: '',
         time: '',
         format: 'Virtual (Google Meet)',

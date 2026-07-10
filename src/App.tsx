@@ -35,6 +35,7 @@ function useReveal(): [React.RefObject<HTMLDivElement | null>, boolean] {
   }, []);
   return [ref, shown];
 }
+
 function Reveal({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
   const [ref, shown] = useReveal();
   return (
@@ -45,6 +46,7 @@ function Reveal({ children, className = "", delay = 0 }: { children: ReactNode; 
     }}>{children}</div>
   );
 }
+
 function Eyebrow({ label, dark = true }: { label: string; dark?: boolean }) {
   return (
     <div className={`text-[12.5px] font-bold tracking-[0.16em] uppercase mb-3 ${dark ? "text-[#00B4D8]" : "text-[#1B3A5C]/60"}`}
@@ -174,6 +176,7 @@ const EVENTS = [
     color: "#F5A623",
   },
 ];
+
 const SPEAKERS = [
   { name: "Caleb Morris", role: "Senior Software Engineer at Vertex Cloud", tags: ["React", "System Design"], img: "https://i.pravatar.cc/200?img=12" },
   { name: "Ava Reynolds", role: "Product Lead, Fabrikam", tags: ["Strategy", "SASS"], img: "https://i.pravatar.cc/200?img=32" },
@@ -215,12 +218,13 @@ type EventType = {
   status: string;
   title: string;
   tag: string | null;
-  description: string;  // ← Changed from 'desc'
+  description: string;
   date: string;
   time: string;
   format: string;
   color: string;
 };
+
 /* ------------------------------------------------------------------ */
 /*  Registration Modal                                                  */
 /* ------------------------------------------------------------------ */
@@ -228,6 +232,7 @@ type EventType = {
 function inputCls(error?: string) {
   return `w-full bg-[#0A1628] border ${error ? "border-[#EF4444]/60" : "border-white/10"} rounded-xl px-4 py-3 text-white text-[14.5px] placeholder:text-white/25 outline-none focus:border-[#00B4D8] transition-colors min-h-[46px]`;
 }
+
 function Field({ icon: Icon, label, error, children }: { icon?: LucideIcon; label: string; error?: string; children: ReactNode }) {
   return (
     <div>
@@ -244,8 +249,6 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
   const [form, setForm] = useState<RegistrationForm>({ name: "", email: "", password: "", confirm: "", phone: "", country: "", terms: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  
-  // ADD THESE TWO STATE VARIABLES
   const [emailExists, setEmailExists] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
   
@@ -255,7 +258,7 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
         setStep(1);
         setForm({ name: "", email: "", password: "", confirm: "", phone: "", country: "", terms: false });
         setErrors({});
-        setEmailExists(false); // Reset email check
+        setEmailExists(false);
       }, 0);
       return () => clearTimeout(t);
     }
@@ -266,21 +269,14 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
   
   const set = <K extends keyof RegistrationForm>(k: K, v: RegistrationForm[K]) => setForm((f) => ({ ...f, [k]: v } as RegistrationForm));
   
-  // ADD THIS FUNCTION TO CHECK EMAIL
   const checkEmail = async (email: string) => {
     if (!email || !email.includes('@')) {
       setEmailExists(false);
       return;
     }
-    
     setCheckingEmail(true);
     try {
-      const { data } = await supabase
-        .from('registrations')
-        .select('email')
-        .eq('email', email)
-        .single();
-      
+      const { data } = await supabase.from('registrations').select('email').eq('email', email).single();
       setEmailExists(!!data);
     } catch {
       setEmailExists(false);
@@ -311,9 +307,7 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
   
   const handlePay = async () => {
     setLoading(true);
-    
     try {
-      // Check if email exists one more time before saving
       const { data: existingUser } = await supabase
         .from('registrations')
         .select('email')
@@ -336,12 +330,7 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
         payment_status: 'completed'
       };
 
-      console.log('📤 Registering new user:', registrationData.email);
-
-      const { data, error } = await supabase
-        .from('registrations')
-        .insert([registrationData])
-        .select();
+      const { error } = await supabase.from('registrations').insert([registrationData]);
 
       if (error) {
         if (error.code === '23505') {
@@ -352,17 +341,14 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
         throw error;
       }
 
-      console.log('✅ Registration successful:', data);
       setLoading(false);
       setStep(3);
-      
-    } 
-    catch (error: unknown) {
-  console.error('❌ Registration error:', error);
-  const message = error instanceof Error ? error.message : 'Registration failed. Please try again.';
-  alert(message);
-  setLoading(false);
-}
+    } catch (error: unknown) {
+      console.error('❌ Registration error:', error);
+      const message = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+      alert(message);
+      setLoading(false);
+    }
   };
 
   return (
@@ -382,12 +368,9 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
                 <div className="text-[13px] text-white/60">{event.date} · {event.format}</div>
               </div>
             )}
-            
             <Field icon={User} label="Full Name" error={errors.name}>
               <input value={form.name} onChange={(e) => set("name", e.target.value)} autoComplete="name" placeholder="Adaeze Obi" className={inputCls(errors.name)} />
             </Field>
-            
-            {/* EMAIL FIELD WITH CHECK */}
             <Field icon={Mail} label="Email Address" error={errors.email}>
               <input 
                 value={form.email} 
@@ -401,48 +384,37 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
                 className={inputCls(errors.email)} 
               />
               {emailExists && (
-                <p className="text-[#F5A623] text-[12.5px] mt-1">
-                  ⚠️ This email is already registered. Please use a different email.
-                </p>
+                <p className="text-[#F5A623] text-[12.5px] mt-1">⚠️ This email is already registered. Please use a different email.</p>
               )}
               {checkingEmail && (
-                <p className="text-white/40 text-[12.5px] mt-1">
-                  Checking email...
-                </p>
+                <p className="text-white/40 text-[12.5px] mt-1">Checking email...</p>
               )}
             </Field>
-            
             <Field icon={Lock} label="Password" error={errors.password}>
               <input value={form.password} onChange={(e) => set("password", e.target.value)} type="password" autoComplete="new-password" placeholder="At least 8 characters" className={inputCls(errors.password)} />
             </Field>
-            
             <Field icon={Lock} label="Confirm Password" error={errors.confirm}>
               <input value={form.confirm} onChange={(e) => set("confirm", e.target.value)} type="password" autoComplete="new-password" placeholder="Repeat password" className={inputCls(errors.confirm)} />
             </Field>
-            
             <Field icon={Phone} label="Phone Number (optional)">
               <input value={form.phone} onChange={(e) => set("phone", e.target.value)} type="tel" autoComplete="tel" placeholder="+234 800 000 0000" className={inputCls()} />
             </Field>
-            
             <Field label="Country" error={errors.country}>
               <select value={form.country} onChange={(e) => set("country", e.target.value)} className={inputCls(errors.country)}>
                 <option value="">Select country</option>
                 {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </Field>
-            
             <label className="flex items-start gap-3 pt-1 cursor-pointer">
               <input type="checkbox" checked={form.terms} onChange={(e) => set("terms", e.target.checked)} className="mt-1 w-4 h-4 accent-[#F5A623]" />
               <span className="text-[13px] text-white/60">I agree to the Terms of Service and Privacy Policy.</span>
             </label>
             {errors.terms && <p className="text-[#EF4444] text-[12.5px] -mt-3">{errors.terms}</p>}
-            
             <Btn variant="primary" className="w-full mt-2" onClick={handleContinue}>
               Continue to Payment <ArrowRight size={16} />
             </Btn>
           </div>
         )}
-        
         {step === 2 && (
           <div className="p-6 space-y-5">
             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 flex items-center justify-between">
@@ -466,12 +438,9 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
             <Btn variant="primary" className="w-full" onClick={handlePay} disabled={loading}>
               {loading ? "Processing…" : "Pay $3.99"}
             </Btn>
-            <button onClick={() => setStep(1)} className="w-full text-center text-white/40 text-[13px] hover:text-white/70">
-              Back
-            </button>
+            <button onClick={() => setStep(1)} className="w-full text-center text-white/40 text-[13px] hover:text-white/70">Back</button>
           </div>
         )}
-        
         {step === 3 && (
           <div className="p-8 text-center space-y-5">
             <div className="w-16 h-16 rounded-full bg-[#22C55E]/15 border border-[#22C55E]/40 flex items-center justify-center mx-auto">
@@ -490,7 +459,6 @@ function RegistrationModal({ open, onClose, event }: { open: boolean; onClose: (
     </div>
   );
 }
- 
 
 /* ------------------------------------------------------------------ */
 /*  Event Card                                                          */
@@ -501,16 +469,23 @@ function EventCard({ ev, onRegister, delay }: { ev: EventType; onRegister: (ev: 
     <Reveal delay={delay}>
       <div className="rounded-[22px] overflow-hidden border border-white/10 bg-white/[0.03] hover:border-white/20 hover:-translate-y-1.5 transition-all duration-400 h-full flex flex-col">
         <div className="relative h-40 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${ev.color}22, #0A162800)` }}>
-          {/* ... header code ... */}
+          <div className="absolute inset-0 opacity-30" style={{
+            backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+            backgroundSize: "100%",
+          }} />
+          <span className="absolute top-3 left-3 text-[12px] font-mono font-bold text-white/50 p-2 border rounded-2xl border-white/25" style={{ color: ev.color, border: `1px solid ${ev.color}40`, fontFamily: "'JetBrains Mono', monospace"  }}>{`#${ev.n}`}</span>
+          {ev.tag && <span className="absolute top-3 right-3 text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/70 border border-white/15">{ev.tag}</span>}
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: `${ev.color}22`, border: `1px solid ${ev.color}44` }}>
+            {ev.title === "Crash Class" && <Code2 size={24} style={{ color: ev.color }} />}
+            {ev.title === "SASS Track" && <Rocket size={24} style={{ color: ev.color }} />}
+            {ev.title === "The Competition" && <Trophy size={24} style={{ color: ev.color }} />}
+            {ev.title === "The Speech" && <Rocket size={24} style={{ color: ev.color }} />}
+          </div>
         </div>
         <div className="p-6 flex flex-col flex-1">
           <div className="mb-3"><StatusPill status={ev.status} /></div>
           <h3 className="text-white font-bold text-[19px]">{ev.title}</h3>
-          
-          {/* ✅ FIND THIS LINE AND CHANGE IT: */}
           <p className="text-white/55 text-[14px] mt-2 leading-relaxed flex-1">{ev.description}</p>
-          {/* ↑↑↑ Change from ev.desc to ev.description ↑↑↑ */}
-          
           <div className="mt-5 space-y-2 text-[13px] text-white/50">
             <div className="flex items-center gap-2"><Calendar size={14} /> {ev.date}</div>
             <div className="flex items-center gap-2"><Clock size={14} /> {ev.time}</div>
@@ -530,15 +505,7 @@ function EventCard({ ev, onRegister, delay }: { ev: EventType; onRegister: (ev: 
 /*  Main App                                                            */
 /* ------------------------------------------------------------------ */
 
-
-
-  // ========== FUNCTIONS ==========
-  export default function App() {
-  // ... state declarations ...
-
-   // ============================================================
-  // 1. ALL useState hooks FIRST (BEFORE any conditional returns)
-  // ============================================================
+export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -547,9 +514,6 @@ function EventCard({ ev, onRegister, delay }: { ev: EventType; onRegister: (ev: 
   const [events, setEvents] = useState<EventType[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
 
-  // ============================================================
-  // 2. ALL useEffect hooks SECOND
-  // ============================================================
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     window.addEventListener("scroll", onScroll);
@@ -560,40 +524,40 @@ function EventCard({ ev, onRegister, delay }: { ev: EventType; onRegister: (ev: 
     const t = setInterval(() => setTestiIdx((i) => (i + 1) % TESTIMONIALS.length), 5000); 
     return () => clearInterval(t); 
   }, []);
-// Fetch events from Supabase
-useEffect(() => {
-  let isMounted = true;
 
-  const loadEvents = async () => {
-    setLoadingEvents(true);
-    try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('n', { ascending: true });
+  // Fetch events from Supabase
+  useEffect(() => {
+    let isMounted = true;
 
-      if (error) throw error;
-      
-      if (isMounted) {
-        setEvents(data || []);
-        setLoadingEvents(false);
+    const loadEvents = async () => {
+      setLoadingEvents(true);
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .order('n', { ascending: true });
+
+        if (error) throw error;
+        
+        if (isMounted) {
+          setEvents(data || []);
+          setLoadingEvents(false);
+        }
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        if (isMounted) {
+          setEvents(EVENTS);
+          setLoadingEvents(false);
+        }
       }
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      if (isMounted) {
-        setEvents(EVENTS);
-        setLoadingEvents(false);
-      }
-    }
-  };
+    };
 
-  loadEvents();
+    loadEvents();
 
-  return () => {
-    isMounted = false;
-  };
-}, []);
-
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const scrollTo = (id: string) => { 
     setMenuOpen(false); 
@@ -605,20 +569,11 @@ useEffect(() => {
     setModalOpen(true); 
   };
 
-  // ============================================================
-  // 4. CALL fetchEvents IN useEffect
-  // ============================================================
-
-  // ============================================================
-  // 5. ADMIN ROUTE CHECK - AFTER ALL HOOKS
-  // ============================================================
+  // ADMIN ROUTE CHECK - AFTER ALL HOOKS
   if (window.location.pathname === '/admin') {
     return <Admin />;
   }
 
-  // ============================================================
-  // 6. FEATURED EVENT
-  // ============================================================
   const featured = events.length > 0 ? events[0] : EVENTS[0];
 
   return (
@@ -712,39 +667,34 @@ useEffect(() => {
       </section>
 
       {/* PROGRAMS THAT TRANSFORM — event cards */}
-     {/* PROGRAMS THAT TRANSFORM — event cards */}
-<section id="events" className="py-24 px-5 sm:px-8" style={{ background: "#0A1628" }}>
-  <div className="max-w-[1200px] mx-auto">
-    <Reveal>
-      <Eyebrow label="Our Initiatives" />
-      <h2 className="text-white font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>
-        The Community Program
-      </h2>
-      <p className="text-white/50 mt-3 max-w-[560px] mx-auto text-center">
-        From skill-building to career launch, our initiatives are designed to equip you for success.
-      </p>
-    </Reveal>
-    
-    {/* ✅ REPLACED WITH THIS: */}
-    <div className="flex flex-wrap justify-center gap-6 mt-12">
-      {loadingEvents ? (
-        <div className="text-white/40 text-center py-12 w-full">Loading events...</div>
-      ) : events.length === 0 ? (
-        <div className="text-white/40 text-center py-12 w-full">No events yet. Check back soon!</div>
-      ) : (
-        events.map((ev, i) => (
-          <div key={ev.id || ev.n || ev.title} className="flex-1 min-w-[280px] lg:max-w-[380px]">
-            <EventCard ev={ev} delay={i * 80} onRegister={openRegister} />
+      <section id="events" className="py-24 px-5 sm:px-8" style={{ background: "#0A1628" }}>
+        <div className="max-w-[1200px] mx-auto">
+          <Reveal>
+            <Eyebrow label="Our Initiatives" />
+            <h2 className="text-white font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>The Community Program</h2>
+            <p className="text-white/50 mt-3 max-w-[560px] mx-auto text-center">
+              From skill-building to career launch, our initiatives are designed to equip you for success.
+            </p>
+          </Reveal>
+          <div className="flex flex-wrap justify-center gap-6 mt-12">
+            {loadingEvents ? (
+              <div className="text-white/40 text-center py-12 w-full">Loading events...</div>
+            ) : events.length === 0 ? (
+              <div className="text-white/40 text-center py-12 w-full">No events yet. Check back soon!</div>
+            ) : (
+              events.map((ev, i) => (
+                <div key={ev.id || ev.n || ev.title} className="flex-1 min-w-[280px] lg:max-w-[380px]">
+                  <EventCard ev={ev} delay={i * 80} onRegister={openRegister} />
+                </div>
+              ))
+            )}
           </div>
-        ))
-      )}
-    </div>
-    
-    <Reveal delay={260} className="text-center mt-10">
-      <button className="text-[#00B4D8] font-semibold text-[14.5px]">Explore all events →</button>
-    </Reveal>
-  </div>
-</section>
+          <Reveal delay={260} className="text-center mt-10">
+            <button className="text-[#00B4D8] font-semibold text-[14.5px]">Explore all events →</button>
+          </Reveal>
+        </div>
+      </section>
+
       {/* CHOOSE YOUR PATH — stats + featured spotlight */}
       <section className="py-24 px-5 sm:px-8" style={{ background: "linear-gradient(135deg,#14213D,#0A1628)" }}>
         <div className="max-w-[1200px] mx-auto">
@@ -753,9 +703,6 @@ useEffect(() => {
             <h2 className="text-white font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>Choose Your Path to Excellence</h2>
             <p className="text-white/55 mt-3">Join transformative events designed to help you build a thriving career and monetize your skills.</p>
           </Reveal>
-
-    
-
           <Reveal delay={180}>
             <div className="rounded-[26px] overflow-hidden border border-white/10 bg-white/[0.03] grid lg:grid-cols-[1fr_1.1fr]">
               <div className="p-9 relative flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${featured.color}22, transparent)`, minHeight: 260 }}>
@@ -786,33 +733,32 @@ useEffect(() => {
       </section>
 
       {/* SPEAKERS */}
-                {/* SPEAKERS */}
-<section id="speakers" className="py-24 px-5 sm:px-8" style={{ background: "#F8F9FA" }}>
-  <div className="max-w-[1200px] mx-auto">
-    <Reveal>
-      <Eyebrow label="Faculty" dark={false} />
-      <h2 className="text-[#0A1628] font-extrabold tracking-tight text-center" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>
-        Learn from those who have built it
-      </h2>
-      <p className="text-[#14213D]/55 mt-3 max-w-[560px] mx-auto text-center">
-        We connect you with experienced founders, senior engineers, and tech leads.
-      </p>
-    </Reveal>
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-      {/* ADD THIS: */}
-      {SPEAKERS.map((s, i) => (
-        <Reveal key={s.name} delay={i * 60}>
-          <div className="bg-white rounded-[22px] border border-[#1B3A5C]/8 p-6 hover:-translate-y-1.5 transition-all duration-400" style={{ boxShadow: "0 4px 20px rgba(10,22,40,0.04)" }}>
-            <img src={s.img} alt={s.name} className="w-16 h-16 rounded-full object-cover border-2 border-[#F5A623]/30" loading="lazy" />
-            <h3 className="text-[#0A1628] font-bold text-[16px] mt-4">{s.name}</h3>
-            <p className="text-[#14213D]/50 text-[13.5px]">{s.role}</p>
-            <div className="flex flex-wrap gap-1.5 mt-3">{s.tags.map((t) => <span key={t} className="text-[11.5px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "#00B4D815", color: "#00779b" }}>{t}</span>)}</div>
+      <section id="speakers" className="py-24 px-5 sm:px-8" style={{ background: "#F8F9FA" }}>
+        <div className="max-w-[1200px] mx-auto">
+          <Reveal>
+            <Eyebrow label="Faculty" dark={false} />
+            <h2 className="text-[#0A1628] font-extrabold tracking-tight text-center" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>
+              Learn from those who have built it
+            </h2>
+            <p className="text-[#14213D]/55 mt-3 max-w-[560px] mx-auto text-center">
+              We connect you with experienced founders, senior engineers, and tech leads.
+            </p>
+          </Reveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+            {SPEAKERS.map((s, i) => (
+              <Reveal key={s.name} delay={i * 60}>
+                <div className="bg-white rounded-[22px] border border-[#1B3A5C]/8 p-6 hover:-translate-y-1.5 transition-all duration-400" style={{ boxShadow: "0 4px 20px rgba(10,22,40,0.04)" }}>
+                  <img src={s.img} alt={s.name} className="w-16 h-16 rounded-full object-cover border-2 border-[#F5A623]/30" loading="lazy" />
+                  <h3 className="text-[#0A1628] font-bold text-[16px] mt-4">{s.name}</h3>
+                  <p className="text-[#14213D]/50 text-[13.5px]">{s.role}</p>
+                  <div className="flex flex-wrap gap-1.5 mt-3">{s.tags.map((t) => <span key={t} className="text-[11.5px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "#00B4D815", color: "#00779b" }}>{t}</span>)}</div>
+                </div>
+              </Reveal>
+            ))}
           </div>
-        </Reveal>
-      ))}
-    </div>
-  </div>
-</section>
+        </div>
+      </section>
+
       {/* PRICING */}
       <section id="pricing" className="py-24 px-5 sm:px-8" style={{ background: "#0A1628" }}>
         <div className="max-w-[560px] mx-auto text-center">
@@ -831,54 +777,47 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* AFFILIATE */}
-     {/* REFERRAL PROGRAM - Updated */}
-<section className="py-16 px-5 sm:px-8" style={{ background: "linear-gradient(135deg,#14213D,#0A1628)" }}>
-  <div className="max-w-[1200px] mx-auto">
-    <Reveal className="text-center">
-      <Eyebrow label="Referral Program" />
-      <h2 className="text-white font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>
-        Refer &amp; Earn
-      </h2>
-      <p className="text-white/60 mt-2">Share the opportunity. Earn rewards.</p>
-    </Reveal>
-
-    <div className="grid sm:grid-cols-2 gap-4 mt-10 max-w-4xl mx-auto">
-      {[
-        { num: "01", title: "Share the opportunity", desc: "Tell your friends about our community and programs." },
-        { num: "02", title: "Friend joins paid program", desc: "They enroll in any of our paid programs." },
-        { num: "03", title: "Friend joins the community", desc: "They become part of our growing network of builders." },
-        { num: "04", title: "DM the admin", desc: "Reach out at +234 706 892 3676 to claim your rewards." }
-      ].map((step, i) => (
-        <Reveal key={step.num} delay={i * 80}>
-          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all h-full">
-            <div className="flex items-start gap-3">
-              <span className="font-mono text-[#F5A623] text-[12px] font-bold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                {step.num}
-              </span>
-              <div className="text-left">
-                <div className="text-white font-semibold text-[14px]">{step.title}</div>
-                <div className="text-white/50 text-[13px] mt-0.5">{step.desc}</div>
-              </div>
-            </div>
+      {/* REFERRAL PROGRAM */}
+      <section className="py-16 px-5 sm:px-8" style={{ background: "linear-gradient(135deg,#14213D,#0A1628)" }}>
+        <div className="max-w-[1200px] mx-auto">
+          <Reveal className="text-center">
+            <Eyebrow label="Referral Program" />
+            <h2 className="text-white font-extrabold tracking-tight" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>Refer &amp; Earn</h2>
+            <p className="text-white/60 mt-2">Share the opportunity. Earn rewards.</p>
+          </Reveal>
+          <div className="grid sm:grid-cols-2 gap-4 mt-10 max-w-4xl mx-auto">
+            {[
+              { num: "01", title: "Share the opportunity", desc: "Tell your friends about our community and programs." },
+              { num: "02", title: "Friend joins paid program", desc: "They enroll in any of our paid programs." },
+              { num: "03", title: "Friend joins the community", desc: "They become part of our growing network of builders." },
+              { num: "04", title: "DM the admin", desc: "Reach out at +234 706 892 3676 to claim your rewards." }
+            ].map((step, i) => (
+              <Reveal key={step.num} delay={i * 80}>
+                <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all h-full">
+                  <div className="flex items-start gap-3">
+                    <span className="font-mono text-[#F5A623] text-[12px] font-bold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{step.num}</span>
+                    <div className="text-left">
+                      <div className="text-white font-semibold text-[14px]">{step.title}</div>
+                      <div className="text-white/50 text-[13px] mt-0.5">{step.desc}</div>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
           </div>
-        </Reveal>
-      ))}
-    </div>
-
-    {/* Bonus: Invite 5 members get free program */}
-    <Reveal delay={320} className="text-center mt-8">
-      <div className="inline-block bg-gradient-to-r from-[#F5A623]/10 to-[#00B4D8]/10 border-2 border-[#F5A623]/30 rounded-2xl p-5 px-8">
-        <div className="flex items-center gap-2 justify-center">
-          <Trophy size={20} className="text-[#F5A623]" />
-          <span className="text-white font-bold">Invite 5 members → Get paid program FREE</span>
-          <Trophy size={20} className="text-[#F5A623]" />
+          <Reveal delay={320} className="text-center mt-8">
+            <div className="inline-block bg-gradient-to-r from-[#F5A623]/10 to-[#00B4D8]/10 border-2 border-[#F5A623]/30 rounded-2xl p-5 px-8">
+              <div className="flex items-center gap-2 justify-center">
+                <Trophy size={20} className="text-[#F5A623]" />
+                <span className="text-white font-bold">Invite 5 members → Get paid program FREE</span>
+                <Trophy size={20} className="text-[#F5A623]" />
+              </div>
+              <p className="text-white/40 text-[12px] mt-1">(5 members = 1 free paid program slot)</p>
+            </div>
+          </Reveal>
         </div>
-        <p className="text-white/40 text-[12px] mt-1">(5 members = 1 free paid program slot)</p>
-      </div>
-    </Reveal>
-  </div>
-</section>
+      </section>
+
       {/* TESTIMONIALS */}
       <section id="contact" className="py-24 px-5 sm:px-8" style={{ background: "#0A1628" }}>
         <div className="max-w-[680px] mx-auto text-center">
@@ -938,4 +877,4 @@ useEffect(() => {
       </footer>
     </div>
   );
-  }
+}
