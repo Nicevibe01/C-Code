@@ -418,9 +418,7 @@ export default function Admin() {
           </div>
         )}
 
-        {/* ============================================================ */}
         {/* EVENTS SECTION */}
-        {/* ============================================================ */}
         <div className="mb-8 sm:mb-12">
           <h2 className="text-xl sm:text-2xl font-bold mb-4 flex items-center gap-2">
             <Calendar size={20} className="text-[#F5A623]" />
@@ -429,47 +427,51 @@ export default function Admin() {
           
           {/* Mobile Event Cards */}
           <div className="sm:hidden space-y-4">
-            {events.map((ev) => (
-              <div key={ev.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-white/40 text-sm">#{ev.n}</span>
-                  <StatusPill status={ev.status} />
+            {events.length === 0 ? (
+              <div className="text-white/40 text-center py-4">No events yet. Add one!</div>
+            ) : (
+              events.map((ev) => (
+                <div key={ev.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-white/40 text-sm">#{ev.n}</span>
+                    <StatusPill status={ev.status} />
+                  </div>
+                  <div className="mb-2">
+                    {editingEvent?.id === ev.id ? (
+                      <input
+                        value={editingEvent.title}
+                        onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
+                        className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white w-full"
+                      />
+                    ) : (
+                      <span style={{ color: ev.color }} className="font-medium">{ev.title}</span>
+                    )}
+                  </div>
+                  <div className="text-white/60 text-sm mb-3">{ev.date}</div>
+                  <div className="flex gap-2 flex-wrap">
+                    {editingEvent?.id === ev.id ? (
+                      <>
+                        <button onClick={saveEventEdit} className="text-green-400 hover:text-green-300 p-1 flex-1 bg-green-500/10 rounded-lg justify-center flex items-center gap-1"><Check size={16} /> Save</button>
+                        <button onClick={cancelEditing} className="text-red-400 hover:text-red-300 p-1 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"><X size={16} /> Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => startEditing(ev)} className="text-blue-400 hover:text-blue-300 p-2 flex-1 bg-blue-500/10 rounded-lg justify-center flex items-center gap-1"><Edit size={16} /> Edit</button>
+                        <button onClick={() => deleteEvent(ev.id, ev.title)} className="text-red-400 hover:text-red-300 p-2 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"><Trash2 size={16} /> Delete</button>
+                        <select onChange={(e) => updateEventStatus(ev.id, e.target.value)} value="" className="flex-1 bg-[#0A1628] border border-white/10 rounded-lg px-2 py-1 text-white text-xs">
+                          <option value="">Quick Status</option>
+                          <option value="Upcoming">Upcoming</option>
+                          <option value="Open for Registration">Open for Registration</option>
+                          <option value="Coming Soon">Coming Soon</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div className="mb-2">
-                  {editingEvent?.id === ev.id ? (
-                    <input
-                      value={editingEvent.title}
-                      onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
-                      className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white w-full"
-                    />
-                  ) : (
-                    <span style={{ color: ev.color }} className="font-medium">{ev.title}</span>
-                  )}
-                </div>
-                <div className="text-white/60 text-sm mb-3">{ev.date}</div>
-                <div className="flex gap-2 flex-wrap">
-                  {editingEvent?.id === ev.id ? (
-                    <>
-                      <button onClick={saveEventEdit} className="text-green-400 hover:text-green-300 p-1 flex-1 bg-green-500/10 rounded-lg justify-center flex items-center gap-1"><Check size={16} /> Save</button>
-                      <button onClick={cancelEditing} className="text-red-400 hover:text-red-300 p-1 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"><X size={16} /> Cancel</button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={() => startEditing(ev)} className="text-blue-400 hover:text-blue-300 p-2 flex-1 bg-blue-500/10 rounded-lg justify-center flex items-center gap-1"><Edit size={16} /> Edit</button>
-                      <button onClick={() => deleteEvent(ev.id, ev.title)} className="text-red-400 hover:text-red-300 p-2 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"><Trash2 size={16} /> Delete</button>
-                      <select onChange={(e) => updateEventStatus(ev.id, e.target.value)} value="" className="flex-1 bg-[#0A1628] border border-white/10 rounded-lg px-2 py-1 text-white text-xs">
-                        <option value="">Quick Status</option>
-                        <option value="Upcoming">Upcoming</option>
-                        <option value="Open for Registration">Open for Registration</option>
-                        <option value="Coming Soon">Coming Soon</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Desktop Event Table */}
@@ -485,63 +487,67 @@ export default function Admin() {
                 </tr>
               </thead>
               <tbody>
-                {events.map((ev) => (
-                  <tr key={ev.id} className="border-t border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="p-3">{ev.n}</td>
-                    <td className="p-3 font-medium">
-                      {editingEvent?.id === ev.id ? (
-                        <input value={editingEvent.title} onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })} className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white w-full" />
-                      ) : (
-                        <span style={{ color: ev.color }}>{ev.title}</span>
-                      )}
-                    </td>
-                    <td className="p-3">
-                      {editingEvent?.id === ev.id ? (
-                        <select value={editingEvent.status} onChange={(e) => setEditingEvent({ ...editingEvent, status: e.target.value })} className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white">
-                          <option value="Upcoming">Upcoming</option>
-                          <option value="Open for Registration">Open for Registration</option>
-                          <option value="Coming Soon">Coming Soon</option>
-                          <option value="Completed">Completed</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                      ) : (
-                        <StatusPill status={ev.status} />
-                      )}
-                    </td>
-                    <td className="p-3 text-white/70">{ev.date}</td>
-                    <td className="p-3">
-                      <div className="flex gap-2">
-                        {editingEvent?.id === ev.id ? (
-                          <>
-                            <button onClick={saveEventEdit} className="text-green-400 hover:text-green-300 p-1" title="Save"><Check size={18} /></button>
-                            <button onClick={cancelEditing} className="text-red-400 hover:text-red-300 p-1" title="Cancel"><X size={18} /></button>
-                          </>
-                        ) : (
-                          <>
-                            <button onClick={() => startEditing(ev)} className="text-blue-400 hover:text-blue-300 p-1" title="Edit"><Edit size={18} /></button>
-                            <button onClick={() => deleteEvent(ev.id, ev.title)} className="text-red-400 hover:text-red-300 p-1" title="Delete"><Trash2 size={18} /></button>
-                            <select onChange={(e) => updateEventStatus(ev.id, e.target.value)} value="" className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white text-xs">
-                              <option value="">Quick Status</option>
-                              <option value="Upcoming">Upcoming</option>
-                              <option value="Open for Registration">Open for Registration</option>
-                              <option value="Coming Soon">Coming Soon</option>
-                              <option value="Completed">Completed</option>
-                              <option value="Cancelled">Cancelled</option>
-                            </select>
-                          </>
-                        )}
-                      </div>
-                    </td>
+                {events.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-6 text-center text-white/40">No events yet. Click "Add New" to create one!</td>
                   </tr>
-                ))}
+                ) : (
+                  events.map((ev) => (
+                    <tr key={ev.id} className="border-t border-white/5 hover:bg-white/5 transition-colors">
+                      <td className="p-3">{ev.n}</td>
+                      <td className="p-3 font-medium">
+                        {editingEvent?.id === ev.id ? (
+                          <input value={editingEvent.title} onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })} className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white w-full" />
+                        ) : (
+                          <span style={{ color: ev.color }}>{ev.title}</span>
+                        )}
+                      </td>
+                      <td className="p-3">
+                        {editingEvent?.id === ev.id ? (
+                          <select value={editingEvent.status} onChange={(e) => setEditingEvent({ ...editingEvent, status: e.target.value })} className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white">
+                            <option value="Upcoming">Upcoming</option>
+                            <option value="Open for Registration">Open for Registration</option>
+                            <option value="Coming Soon">Coming Soon</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                        ) : (
+                          <StatusPill status={ev.status} />
+                        )}
+                      </td>
+                      <td className="p-3 text-white/70">{ev.date}</td>
+                      <td className="p-3">
+                        <div className="flex gap-2">
+                          {editingEvent?.id === ev.id ? (
+                            <>
+                              <button onClick={saveEventEdit} className="text-green-400 hover:text-green-300 p-1" title="Save"><Check size={18} /></button>
+                              <button onClick={cancelEditing} className="text-red-400 hover:text-red-300 p-1" title="Cancel"><X size={18} /></button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => startEditing(ev)} className="text-blue-400 hover:text-blue-300 p-1" title="Edit"><Edit size={18} /></button>
+                              <button onClick={() => deleteEvent(ev.id, ev.title)} className="text-red-400 hover:text-red-300 p-1" title="Delete"><Trash2 size={18} /></button>
+                              <select onChange={(e) => updateEventStatus(ev.id, e.target.value)} value="" className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white text-xs">
+                                <option value="">Quick Status</option>
+                                <option value="Upcoming">Upcoming</option>
+                                <option value="Open for Registration">Open for Registration</option>
+                                <option value="Coming Soon">Coming Soon</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Cancelled">Cancelled</option>
+                              </select>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* ============================================================ */}
         {/* SPEAKERS / COMMUNITY SECTION */}
-        {/* ============================================================ */}
         <div className="mb-8 sm:mb-12 mt-8">
           <h2 className="text-xl sm:text-2xl font-bold mb-4 flex items-center gap-2">
             <Users size={20} className="text-[#F5A623]" />
@@ -551,7 +557,7 @@ export default function Admin() {
           {loadingSpeakers ? (
             <div className="text-center py-8 text-white/40">Loading members...</div>
           ) : speakers.length === 0 ? (
-            <div className="text-center py-8 text-white/40">No community members yet.</div>
+            <div className="text-center py-8 text-white/40">No community members yet. Click "Add New" to add one!</div>
           ) : (
             <>
               {/* Mobile Speaker Cards */}
@@ -628,9 +634,7 @@ export default function Admin() {
           )}
         </div>
 
-        {/* ============================================================ */}
         {/* REGISTRATIONS SECTION */}
-        {/* ============================================================ */}
         <div>
           <h2 className="text-xl sm:text-2xl font-bold mb-4">
             Registrations ({registrations.length})
