@@ -130,31 +130,50 @@ const PILLARS = [
 
 const EVENTS = [
   {
-    n: 1, status: "Upcoming", title: "Crash Class", tag: "New",
-    desc: "Write code that solves real problems. Learn proven patterns from engineers shipping in production.",
-    date: "August 4, 2026", time: "7:00 PM – 9:00 PM WAT", format: "Virtual (Google Meet)",
+    n: 1,
+    status: "Upcoming",
+    title: "Crash Class",
+    tag: "New",
+    description: "Write code that solves real problems. Learn proven patterns from engineers shipping in production.",
+    date: "August 4, 2026",
+    time: "7:00 PM – 9:00 PM WAT",
+    format: "Virtual (Google Meet)",
     color: "#F5A623",
   },
   {
-    n: 2, status: "Open for Registration", title: "SASS Track", tag: null,
-    desc: "Launch a paid MVP from first commit to first customer. Build the portfolio piece that gets you hired.",
-    date: "Rolling enrollment", time: "Self-paced + live check-ins", format: "Virtual (Google Meet)",
+    n: 2,
+    status: "Open for Registration",
+    title: "SASS Track",
+    tag: null,
+    description: "Launch a paid MVP from first commit to first customer. Build the portfolio piece that gets you hired.",
+    date: "Rolling enrollment",
+    time: "Self-paced + live check-ins",
+    format: "Virtual (Google Meet)",
     color: "#22C55E",
   },
   {
-    n: 3, status: "Coming Soon", title: "The Competition", tag: null,
-    desc: "Prove your skills in a team-based challenge, judged by the same speakers teaching the program.",
-    date: "September 2026", time: "TBA", format: "Virtual & Physical",
+    n: 3,
+    status: "Coming Soon",
+    title: "The Competition",
+    tag: null,
+    description: "Prove your skills in a team-based challenge, judged by the same speakers teaching the program.",
+    date: "September 2026",
+    time: "TBA",
+    format: "Virtual & Physical",
     color: "#00B4D8",
   },
-   {
-    n: 4, status: "Upcoming", title: "The Speech", tag: null,
-    desc: "The right way it is done, how to be succesful in tech.",
-    date: "September 2026", time: "TBA", format: "Virtual & Physical",
+  {
+    n: 4,
+    status: "Upcoming",
+    title: "The Speech",
+    tag: null,
+    description: "The right way it is done, how to be successful in tech.",
+    date: "September 2026",
+    time: "TBA",
+    format: "Virtual & Physical",
     color: "#F5A623",
   },
 ];
-
 const SPEAKERS = [
   { name: "Caleb Morris", role: "Senior Software Engineer at Vertex Cloud", tags: ["React", "System Design"], img: "https://i.pravatar.cc/200?img=12" },
   { name: "Ava Reynolds", role: "Product Lead, Fabrikam", tags: ["Strategy", "SASS"], img: "https://i.pravatar.cc/200?img=32" },
@@ -191,18 +210,17 @@ const COUNTRIES = [
 ];
 
 type EventType = {
-  id?: number;  // ← ADD THIS
+  id?: number;
   n: number;
   status: string;
   title: string;
   tag: string | null;
-  desc: string;
+  description: string;  // ← Changed from 'desc'
   date: string;
   time: string;
   format: string;
   color: string;
 };
-
 /* ------------------------------------------------------------------ */
 /*  Registration Modal                                                  */
 /* ------------------------------------------------------------------ */
@@ -483,23 +501,16 @@ function EventCard({ ev, onRegister, delay }: { ev: EventType; onRegister: (ev: 
     <Reveal delay={delay}>
       <div className="rounded-[22px] overflow-hidden border border-white/10 bg-white/[0.03] hover:border-white/20 hover:-translate-y-1.5 transition-all duration-400 h-full flex flex-col">
         <div className="relative h-40 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${ev.color}22, #0A162800)` }}>
-          <div className="absolute inset-0 opacity-30" style={{
-            backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
-            backgroundSize: "100%",
-          }} />
-          <span className="absolute top-3 left-3 text-[12px] font-mono font-bold text-white/50 p-2 border rounded-2xl border-white/25" style={{ color: ev.color, border: `1px solid ${ev.color}40`, fontFamily: "'JetBrains Mono', monospace"  }}>{`#${ev.n}`}</span>
-          {ev.tag && <span className="absolute top-3 right-3 text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/70 border border-white/15">{ev.tag}</span>}
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: `${ev.color}22`, border: `1px solid ${ev.color}44` }}>
-            {ev.title === "Crash Class" && <Code2 size={24} style={{ color: ev.color }} />}
-            {ev.title === "SASS Track" && <Rocket size={24} style={{ color: ev.color }} />}
-            {ev.title === "The Competition" && <Trophy size={24} style={{ color: ev.color }} />}
-            {ev.title === "The Speech" && <Rocket size={24} style={{ color: ev.color }} />}
-          </div>
+          {/* ... header code ... */}
         </div>
         <div className="p-6 flex flex-col flex-1">
           <div className="mb-3"><StatusPill status={ev.status} /></div>
           <h3 className="text-white font-bold text-[19px]">{ev.title}</h3>
-          <p className="text-white/55 text-[14px] mt-2 leading-relaxed flex-1">{ev.desc}</p>
+          
+          {/* ✅ FIND THIS LINE AND CHANGE IT: */}
+          <p className="text-white/55 text-[14px] mt-2 leading-relaxed flex-1">{ev.description}</p>
+          {/* ↑↑↑ Change from ev.desc to ev.description ↑↑↑ */}
+          
           <div className="mt-5 space-y-2 text-[13px] text-white/50">
             <div className="flex items-center gap-2"><Calendar size={14} /> {ev.date}</div>
             <div className="flex items-center gap-2"><Clock size={14} /> {ev.time}</div>
@@ -582,42 +593,7 @@ useEffect(() => {
     isMounted = false;
   };
 }, []);
-  // ============================================================
-  // 3. DEFINE FUNCTIONS
-  // ============================================================
- // Fetch events from Supabase
-useEffect(() => {
-  let isMounted = true;
 
-  const loadEvents = async () => {
-    setLoadingEvents(true);
-    try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('n', { ascending: true });
-
-      if (error) throw error;
-      
-      if (isMounted) {
-        setEvents(data || []);
-        setLoadingEvents(false);
-      }
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      if (isMounted) {
-        setEvents(EVENTS);
-        setLoadingEvents(false);
-      }
-    }
-  };
-
-  loadEvents();
-
-  return () => {
-    isMounted = false;
-  };
-}, []);
 
   const scrollTo = (id: string) => { 
     setMenuOpen(false); 
@@ -791,7 +767,7 @@ useEffect(() => {
               <div className="p-9">
                 <div className="text-white/40 text-[12.5px] font-bold tracking-wide uppercase mb-2">{featured.status} · Learn</div>
                 <h3 className="text-white font-extrabold text-[28px]">{featured.title}</h3>
-                <p className="text-white/55 mt-3 leading-relaxed">{featured.desc}</p>
+                <p className="text-white/55 mt-3 leading-relaxed">{featured.description}</p>
                 <div className="mt-5 space-y-2 text-[14px] text-white/55">
                   <div className="flex items-center gap-2"><Calendar size={15} /> {featured.date}</div>
                   <div className="flex items-center gap-2"><Clock size={15} /> {featured.time}</div>

@@ -19,7 +19,7 @@ export default function AddEventModal({ isOpen, onClose, onEventAdded }: AddEven
     status: 'Upcoming',
     title: '',
     tag: '',
-    desc: '',
+    description: '',  // ← Changed from 'desc'
     date: '',
     time: '',
     format: 'Virtual (Google Meet)',
@@ -31,6 +31,7 @@ export default function AddEventModal({ isOpen, onClose, onEventAdded }: AddEven
     setLoading(true);
 
     try {
+      // Get the next number
       const { data: events } = await supabase
         .from('events')
         .select('n')
@@ -42,12 +43,21 @@ export default function AddEventModal({ isOpen, onClose, onEventAdded }: AddEven
       const { error } = await supabase
         .from('events')
         .insert([{
-          ...form,
           n: nextN,
-          tag: form.tag || null
+          status: form.status,
+          title: form.title,
+          tag: form.tag || null,
+          description: form.description,  // ← Changed from desc
+          date: form.date,
+          time: form.time,
+          format: form.format,
+          color: form.color
         }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       alert('Event added successfully!');
       onEventAdded();
@@ -57,7 +67,7 @@ export default function AddEventModal({ isOpen, onClose, onEventAdded }: AddEven
         status: 'Upcoming',
         title: '',
         tag: '',
-        desc: '',
+        description: '',  // ← Changed from 'desc'
         date: '',
         time: '',
         format: 'Virtual (Google Meet)',
@@ -131,8 +141,8 @@ export default function AddEventModal({ isOpen, onClose, onEventAdded }: AddEven
               <FileText size={14} /> Description
             </label>
             <textarea
-              value={form.desc}
-              onChange={(e) => setForm({ ...form, desc: e.target.value })}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="w-full bg-[#0A1628] border border-white/10 rounded-xl px-4 py-3 text-white min-h-[80px]"
               placeholder="Describe the event..."
               required
