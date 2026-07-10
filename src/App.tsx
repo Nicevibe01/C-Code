@@ -177,15 +177,6 @@ const EVENTS = [
   },
 ];
 
-const SPEAKERS = [
-  { name: "Caleb Morris", role: "Senior Software Engineer at Vertex Cloud", tags: ["React", "System Design"], img: "https://i.pravatar.cc/200?img=12" },
-  { name: "Ava Reynolds", role: "Product Lead, Fabrikam", tags: ["Strategy", "SASS"], img: "https://i.pravatar.cc/200?img=32" },
-  { name: "Daniel Okoye", role: "Founder, Shiplt", tags: ["MVP", "Growth"], img: "https://i.pravatar.cc/200?img=51" },
-  { name: "Sofia Martinez", role: "Staff Engineer, Cascade", tags: ["Node.js", "APIs"], img: "https://i.pravatar.cc/200?img=45" },
-  { name: "Marcus Lee", role: "Security Engineer, Arbor Data", tags: ["AppSec", "Red Team"], img: "https://i.pravatar.cc/200?img=14" },
-  { name: "Tunde Adeyemi", role: "Engineering Manager, Lumen Labs", tags: ["Hiring", "Careers"], img: "https://i.pravatar.cc/200?img=60" },
-];
-
 const TESTIMONIALS = [
   { quote: "First cohort where I shipped something a stranger actually paid for.", name: "Grace Adenuga", role: "SASS Track alum" },
   { quote: "The teams that treat this like a real job are the ones I end up referring for interviews.", name: "Daniel Okoye", role: "Founder, Shiplt" },
@@ -223,6 +214,17 @@ type EventType = {
   time: string;
   format: string;
   color: string;
+};
+
+type SpeakerType = {
+  id: number;
+  name: string;
+  role: string;
+  tags: string[];
+  image: string;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
 };
 
 /* ------------------------------------------------------------------ */
@@ -513,19 +515,24 @@ export default function App() {
   const [testiIdx, setTestiIdx] = useState(0);
   const [events, setEvents] = useState<EventType[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [speakers, setSpeakers] = useState<SpeakerType[]>([]);
+  const [loadingSpeakers, setLoadingSpeakers] = useState(true);
+  const [showAllSpeakers, setShowAllSpeakers] = useState(false);
 
+  // Scroll effect
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
   
+  // Testimonial rotation
   useEffect(() => { 
     const t = setInterval(() => setTestiIdx((i) => (i + 1) % TESTIMONIALS.length), 5000); 
     return () => clearInterval(t); 
   }, []);
 
-  // Fetch events from Supabase
+  // Fetch events and speakers from Supabase
   useEffect(() => {
     let isMounted = true;
 
@@ -552,7 +559,25 @@ export default function App() {
       }
     };
 
+    const fetchSpeakers = async () => {
+      setLoadingSpeakers(true);
+      try {
+        const { data, error } = await supabase
+          .from('speakers')
+          .select('*')
+          .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        setSpeakers(data || []);
+      } catch (error) {
+        console.error('Error fetching speakers:', error);
+      } finally {
+        setLoadingSpeakers(false);
+      }
+    };
+
     loadEvents();
+    fetchSpeakers();
 
     return () => {
       isMounted = false;
@@ -617,7 +642,7 @@ export default function App() {
             <h1 className="font-extrabold text-white leading-[1.02] tracking-tight" style={{ fontSize: "clamp(2.6rem, 7vw, 4.4rem)" }}>
               From Syntax.<br /><span style={{ background: "linear-gradient(120deg,#F5A623,#ffd27a)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>To Solution.</span>
             </h1>
-            <p className="text-white/55 mt-7 max-w-[500px] leading-relaxed text-[15px] justify-center">
+            <p className="text-white/55 mt-7 max-w-[500px] leading-relaxed text-[15px]">
               This Community is a movement that connects intermediate to advanced learners with experienced industry speakers through live, Virtual events, Competitions, Collaboration and more.
             </p>
             <div className="flex flex-wrap items-center gap-5 mt-9">
@@ -732,30 +757,53 @@ export default function App() {
         </div>
       </section>
 
-      {/* SPEAKERS */}
+      {/* COMMUNITY / SPEAKERS */}
       <section id="speakers" className="py-24 px-5 sm:px-8" style={{ background: "#F8F9FA" }}>
         <div className="max-w-[1200px] mx-auto">
           <Reveal>
-            <Eyebrow label="Faculty" dark={false} />
+            <Eyebrow label="Our Community" dark={false} />
             <h2 className="text-[#0A1628] font-extrabold tracking-tight text-center" style={{ fontSize: "clamp(1.9rem,4vw,2.8rem)" }}>
-              Learn from those who have built it
+              Meet Our Community
             </h2>
             <p className="text-[#14213D]/55 mt-3 max-w-[560px] mx-auto text-center">
-              We connect you with experienced founders, senior engineers, and tech leads.
+              We're a growing community of builders, creators, and innovators.
             </p>
           </Reveal>
+          
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-            {SPEAKERS.map((s, i) => (
-              <Reveal key={s.name} delay={i * 60}>
-                <div className="bg-white rounded-[22px] border border-[#1B3A5C]/8 p-6 hover:-translate-y-1.5 transition-all duration-400" style={{ boxShadow: "0 4px 20px rgba(10,22,40,0.04)" }}>
-                  <img src={s.img} alt={s.name} className="w-16 h-16 rounded-full object-cover border-2 border-[#F5A623]/30" loading="lazy" />
-                  <h3 className="text-[#0A1628] font-bold text-[16px] mt-4">{s.name}</h3>
-                  <p className="text-[#14213D]/50 text-[13.5px]">{s.role}</p>
-                  <div className="flex flex-wrap gap-1.5 mt-3">{s.tags.map((t) => <span key={t} className="text-[11.5px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "#00B4D815", color: "#00779b" }}>{t}</span>)}</div>
-                </div>
-              </Reveal>
-            ))}
+            {loadingSpeakers ? (
+              <div className="text-[#14213D]/40 text-center py-12 col-span-full">Loading community members...</div>
+            ) : speakers.filter(s => s.is_active).length === 0 ? (
+              <div className="text-[#14213D]/40 text-center py-12 col-span-full">Be the first to join our community!</div>
+            ) : (
+              (showAllSpeakers ? speakers.filter(s => s.is_active) : speakers.filter(s => s.is_active).slice(0, 3)).map((s, i) => (
+                <Reveal key={s.id} delay={i * 60}>
+                  <div className="bg-white rounded-[22px] border border-[#1B3A5C]/8 p-6 hover:-translate-y-1.5 transition-all duration-400" style={{ boxShadow: "0 4px 20px rgba(10,22,40,0.04)" }}>
+                    <img src={s.image} alt={s.name} className="w-16 h-16 rounded-full object-cover border-2 border-[#F5A623]/30" loading="lazy" />
+                    <h3 className="text-[#0A1628] font-bold text-[16px] mt-4">{s.name}</h3>
+                    <p className="text-[#14213D]/50 text-[13.5px]">{s.role}</p>
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {s.tags && s.tags.map((t: string) => (
+                        <span key={t} className="text-[11.5px] font-semibold px-2.5 py-1 rounded-full" style={{ background: "#00B4D815", color: "#00779b" }}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                </Reveal>
+              ))
+            )}
           </div>
+          
+          {/* View All / Show Less Button */}
+          {speakers.filter(s => s.is_active).length > 3 && (
+            <Reveal delay={260} className="text-center mt-10">
+              <button 
+                onClick={() => setShowAllSpeakers(!showAllSpeakers)}
+                className="text-[#00B4D8] font-semibold text-[14.5px] hover:underline flex items-center gap-2 mx-auto"
+              >
+                {showAllSpeakers ? 'Show Less ↑' : `View All Community Members (${speakers.filter(s => s.is_active).length}) →`}
+              </button>
+            </Reveal>
+          )}
         </div>
       </section>
 

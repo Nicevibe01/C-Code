@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from './lib/supabase';
-import { Trash2, Plus, Edit, Check, X, Calendar, Menu, X as XIcon } from 'lucide-react';
+import { Trash2, Plus, Edit, Check, X, Calendar, Menu, X as XIcon, Users } from 'lucide-react';
 import AddEventModal from './addEventModal';
 
 interface Registration {
@@ -27,6 +27,17 @@ interface Event {
   color: string;
 }
 
+interface Speaker {
+  id: number;
+  name: string;
+  role: string;
+  tags: string[];
+  image: string;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+}
+
 export default function Admin() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
@@ -40,6 +51,8 @@ export default function Admin() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [speakers, setSpeakers] = useState<Speaker[]>([]);
+  const [loadingSpeakers, setLoadingSpeakers] = useState(false);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
@@ -63,6 +76,7 @@ export default function Admin() {
         setIsAuthenticated(true);
         fetchRegistrations();
         fetchEvents();
+        fetchSpeakers();
       } else {
         alert('Invalid credentials');
       }
@@ -102,6 +116,23 @@ export default function Admin() {
       setEvents(data || []);
     } catch (error) {
       console.error('Error fetching events:', error);
+    }
+  };
+
+  const fetchSpeakers = async () => {
+    setLoadingSpeakers(true);
+    try {
+      const { data, error } = await supabase
+        .from('speakers')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      setSpeakers(data || []);
+    } catch (error) {
+      console.error('Error fetching speakers:', error);
+    } finally {
+      setLoadingSpeakers(false);
     }
   };
 
@@ -147,6 +178,25 @@ export default function Admin() {
     }
   };
 
+  const deleteSpeaker = async (id: number, name: string) => {
+    if (!confirm(`Are you sure you want to remove "${name}"?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from('speakers')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setSpeakers(speakers.filter(s => s.id !== id));
+      showSuccessToast(`"${name}" removed from community!`);
+    } catch (error) {
+      console.error('Error deleting speaker:', error);
+      alert('Failed to remove speaker.');
+    }
+  };
+
   const updateEventStatus = async (id: number, newStatus: string) => {
     try {
       const { error } = await supabase
@@ -163,6 +213,25 @@ export default function Admin() {
     } catch (error) {
       console.error('Error updating event:', error);
       alert('Failed to update event status.');
+    }
+  };
+
+  const toggleSpeakerActive = async (id: number, isActive: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('speakers')
+        .update({ is_active: isActive })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setSpeakers(speakers.map(s => 
+        s.id === id ? { ...s, is_active: isActive } : s
+      ));
+      showSuccessToast(`Member ${isActive ? 'activated' : 'deactivated'}!`);
+    } catch (error) {
+      console.error('Error updating speaker:', error);
+      alert('Failed to update member status.');
     }
   };
 
@@ -268,7 +337,6 @@ export default function Admin() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
           
-          {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="sm:hidden text-white/60 hover:text-white transition-colors"
@@ -276,7 +344,6 @@ export default function Admin() {
             {mobileMenuOpen ? <XIcon size={24} /> : <Menu size={24} />}
           </button>
 
-          {/* Desktop Actions */}
           <div className="hidden sm:flex gap-4 items-center flex-wrap">
             <button
               onClick={() => setShowAddEvent(true)}
@@ -292,6 +359,7 @@ export default function Admin() {
                 setIsAuthenticated(false);
                 setRegistrations([]);
                 setEvents([]);
+                setSpeakers([]);
               }}
               className="text-red-400 hover:text-red-300 transition-colors text-sm"
             >
@@ -300,7 +368,6 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* Mobile Actions */}
         {mobileMenuOpen && (
           <div className="sm:hidden flex flex-col gap-3 bg-white/5 p-4 rounded-xl border border-white/10 mb-6">
             <button
@@ -320,6 +387,7 @@ export default function Admin() {
                 setIsAuthenticated(false);
                 setRegistrations([]);
                 setEvents([]);
+                setSpeakers([]);
               }}
               className="text-red-400 hover:text-red-300 transition-colors text-center"
             >
@@ -328,7 +396,9 @@ export default function Admin() {
           </div>
         )}
 
+        {/* ============================================================ */}
         {/* EVENTS SECTION */}
+        {/* ============================================================ */}
         <div className="mb-8 sm:mb-12">
           <h2 className="text-xl sm:text-2xl font-bold mb-4 flex items-center gap-2">
             <Calendar size={20} className="text-[#F5A623]" />
@@ -351,47 +421,21 @@ export default function Admin() {
                       className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white w-full"
                     />
                   ) : (
-                    <span style={{ color: ev.color }} className="font-medium">
-                      {ev.title}
-                    </span>
+                    <span style={{ color: ev.color }} className="font-medium">{ev.title}</span>
                   )}
                 </div>
                 <div className="text-white/60 text-sm mb-3">{ev.date}</div>
                 <div className="flex gap-2 flex-wrap">
                   {editingEvent?.id === ev.id ? (
                     <>
-                      <button
-                        onClick={saveEventEdit}
-                        className="text-green-400 hover:text-green-300 p-1 flex-1 bg-green-500/10 rounded-lg justify-center flex items-center gap-1"
-                      >
-                        <Check size={16} /> Save
-                      </button>
-                      <button
-                        onClick={cancelEditing}
-                        className="text-red-400 hover:text-red-300 p-1 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"
-                      >
-                        <X size={16} /> Cancel
-                      </button>
+                      <button onClick={saveEventEdit} className="text-green-400 hover:text-green-300 p-1 flex-1 bg-green-500/10 rounded-lg justify-center flex items-center gap-1"><Check size={16} /> Save</button>
+                      <button onClick={cancelEditing} className="text-red-400 hover:text-red-300 p-1 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"><X size={16} /> Cancel</button>
                     </>
                   ) : (
                     <>
-                      <button
-                        onClick={() => startEditing(ev)}
-                        className="text-blue-400 hover:text-blue-300 p-2 flex-1 bg-blue-500/10 rounded-lg justify-center flex items-center gap-1"
-                      >
-                        <Edit size={16} /> Edit
-                      </button>
-                      <button
-                        onClick={() => deleteEvent(ev.id, ev.title)}
-                        className="text-red-400 hover:text-red-300 p-2 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"
-                      >
-                        <Trash2 size={16} /> Delete
-                      </button>
-                      <select
-                        onChange={(e) => updateEventStatus(ev.id, e.target.value)}
-                        value=""
-                        className="flex-1 bg-[#0A1628] border border-white/10 rounded-lg px-2 py-1 text-white text-xs"
-                      >
+                      <button onClick={() => startEditing(ev)} className="text-blue-400 hover:text-blue-300 p-2 flex-1 bg-blue-500/10 rounded-lg justify-center flex items-center gap-1"><Edit size={16} /> Edit</button>
+                      <button onClick={() => deleteEvent(ev.id, ev.title)} className="text-red-400 hover:text-red-300 p-2 flex-1 bg-red-500/10 rounded-lg justify-center flex items-center gap-1"><Trash2 size={16} /> Delete</button>
+                      <select onChange={(e) => updateEventStatus(ev.id, e.target.value)} value="" className="flex-1 bg-[#0A1628] border border-white/10 rounded-lg px-2 py-1 text-white text-xs">
                         <option value="">Quick Status</option>
                         <option value="Upcoming">Upcoming</option>
                         <option value="Open for Registration">Open for Registration</option>
@@ -424,22 +468,14 @@ export default function Admin() {
                     <td className="p-3">{ev.n}</td>
                     <td className="p-3 font-medium">
                       {editingEvent?.id === ev.id ? (
-                        <input
-                          value={editingEvent.title}
-                          onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
-                          className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white w-full"
-                        />
+                        <input value={editingEvent.title} onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })} className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white w-full" />
                       ) : (
                         <span style={{ color: ev.color }}>{ev.title}</span>
                       )}
                     </td>
                     <td className="p-3">
                       {editingEvent?.id === ev.id ? (
-                        <select
-                          value={editingEvent.status}
-                          onChange={(e) => setEditingEvent({ ...editingEvent, status: e.target.value })}
-                          className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white"
-                        >
+                        <select value={editingEvent.status} onChange={(e) => setEditingEvent({ ...editingEvent, status: e.target.value })} className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white">
                           <option value="Upcoming">Upcoming</option>
                           <option value="Open for Registration">Open for Registration</option>
                           <option value="Coming Soon">Coming Soon</option>
@@ -455,42 +491,14 @@ export default function Admin() {
                       <div className="flex gap-2">
                         {editingEvent?.id === ev.id ? (
                           <>
-                            <button
-                              onClick={saveEventEdit}
-                              className="text-green-400 hover:text-green-300 p-1"
-                              title="Save"
-                            >
-                              <Check size={18} />
-                            </button>
-                            <button
-                              onClick={cancelEditing}
-                              className="text-red-400 hover:text-red-300 p-1"
-                              title="Cancel"
-                            >
-                              <X size={18} />
-                            </button>
+                            <button onClick={saveEventEdit} className="text-green-400 hover:text-green-300 p-1" title="Save"><Check size={18} /></button>
+                            <button onClick={cancelEditing} className="text-red-400 hover:text-red-300 p-1" title="Cancel"><X size={18} /></button>
                           </>
                         ) : (
                           <>
-                            <button
-                              onClick={() => startEditing(ev)}
-                              className="text-blue-400 hover:text-blue-300 p-1"
-                              title="Edit"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => deleteEvent(ev.id, ev.title)}
-                              className="text-red-400 hover:text-red-300 p-1"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                            <select
-                              onChange={(e) => updateEventStatus(ev.id, e.target.value)}
-                              value=""
-                              className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white text-xs"
-                            >
+                            <button onClick={() => startEditing(ev)} className="text-blue-400 hover:text-blue-300 p-1" title="Edit"><Edit size={18} /></button>
+                            <button onClick={() => deleteEvent(ev.id, ev.title)} className="text-red-400 hover:text-red-300 p-1" title="Delete"><Trash2 size={18} /></button>
+                            <select onChange={(e) => updateEventStatus(ev.id, e.target.value)} value="" className="bg-[#0A1628] border border-white/10 rounded px-2 py-1 text-white text-xs">
                               <option value="">Quick Status</option>
                               <option value="Upcoming">Upcoming</option>
                               <option value="Open for Registration">Open for Registration</option>
@@ -509,7 +517,98 @@ export default function Admin() {
           </div>
         </div>
 
+        {/* ============================================================ */}
+        {/* SPEAKERS / COMMUNITY SECTION */}
+        {/* ============================================================ */}
+        <div className="mb-8 sm:mb-12 mt-8">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 flex items-center gap-2">
+            <Users size={20} className="text-[#F5A623]" />
+            Community Members ({speakers.length})
+          </h2>
+
+          {loadingSpeakers ? (
+            <div className="text-center py-8 text-white/40">Loading members...</div>
+          ) : speakers.length === 0 ? (
+            <div className="text-center py-8 text-white/40">No community members yet.</div>
+          ) : (
+            <>
+              {/* Mobile Speaker Cards */}
+              <div className="sm:hidden space-y-4">
+                {speakers.map((s) => (
+                  <div key={s.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <img src={s.image} alt={s.name} className="w-12 h-12 rounded-full object-cover" />
+                      <div>
+                        <div className="font-medium">{s.name}</div>
+                        <div className="text-white/60 text-sm">{s.role}</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {s.tags && s.tags.map((t) => (
+                        <span key={t} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#00B4D8]/20 text-[#00B4D8]">{t}</span>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => toggleSpeakerActive(s.id, !s.is_active)} className={`flex-1 text-xs font-semibold px-3 py-1 rounded-lg transition-colors ${s.is_active ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'}`}>
+                        {s.is_active ? 'Active' : 'Inactive'}
+                      </button>
+                      <button onClick={() => deleteSpeaker(s.id, s.name)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Speaker Table */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full border border-white/10 rounded-xl overflow-hidden">
+                  <thead className="bg-white/5">
+                    <tr>
+                      <th className="p-3 text-left text-sm">Image</th>
+                      <th className="p-3 text-left text-sm">Name</th>
+                      <th className="p-3 text-left text-sm">Role</th>
+                      <th className="p-3 text-left text-sm">Tags</th>
+                      <th className="p-3 text-left text-sm">Status</th>
+                      <th className="p-3 text-left text-sm">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {speakers.map((s) => (
+                      <tr key={s.id} className="border-t border-white/5 hover:bg-white/5 transition-colors">
+                        <td className="p-3"><img src={s.image} alt={s.name} className="w-10 h-10 rounded-full object-cover" /></td>
+                        <td className="p-3 font-medium">{s.name}</td>
+                        <td className="p-3 text-white/70 text-sm">{s.role}</td>
+                        <td className="p-3">
+                          <div className="flex flex-wrap gap-1">
+                            {s.tags && s.tags.map((t) => (
+                              <span key={t} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#00B4D8]/20 text-[#00B4D8]">{t}</span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <span className={`px-2 py-1 rounded-full text-xs ${s.is_active ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                            {s.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex gap-2">
+                            <button onClick={() => toggleSpeakerActive(s.id, !s.is_active)} className={`text-xs px-2 py-1 rounded transition-colors ${s.is_active ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'}`}>
+                              {s.is_active ? 'Deactivate' : 'Activate'}
+                            </button>
+                            <button onClick={() => deleteSpeaker(s.id, s.name)} className="text-red-400 hover:text-red-300 p-1"><Trash2 size={16} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ============================================================ */}
         {/* REGISTRATIONS SECTION */}
+        {/* ============================================================ */}
         <div>
           <h2 className="text-xl sm:text-2xl font-bold mb-4">
             Registrations ({registrations.length})
@@ -527,11 +626,7 @@ export default function Admin() {
                   <div key={reg.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-white/40 text-sm">#{index + 1}</span>
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        reg.payment_status === 'completed' 
-                          ? 'bg-green-500/20 text-green-400' 
-                          : 'bg-yellow-500/20 text-yellow-400'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${reg.payment_status === 'completed' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
                         {reg.payment_status}
                       </span>
                     </div>
@@ -540,13 +635,8 @@ export default function Admin() {
                     <div className="text-white/60 text-sm">{reg.phone || '-'}</div>
                     <div className="text-white/60 text-sm">{reg.country}</div>
                     <div className="text-white/60 text-sm">{reg.event_title}</div>
-                    <div className="text-white/40 text-xs mt-1">
-                      {new Date(reg.created_at).toLocaleDateString()}
-                    </div>
-                    <button
-                      onClick={() => deleteRegistration(reg.id, reg.email)}
-                      className="mt-3 w-full text-red-400 hover:text-red-300 transition-colors p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center gap-2"
-                    >
+                    <div className="text-white/40 text-xs mt-1">{new Date(reg.created_at).toLocaleDateString()}</div>
+                    <button onClick={() => deleteRegistration(reg.id, reg.email)} className="mt-3 w-full text-red-400 hover:text-red-300 transition-colors p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center gap-2">
                       <Trash2 size={16} /> Delete Member
                     </button>
                   </div>
@@ -578,24 +668,14 @@ export default function Admin() {
                         <td className="p-4 text-white/70 hidden md:table-cell">{reg.phone || '-'}</td>
                         <td className="p-4 text-white/70 hidden lg:table-cell">{reg.country}</td>
                         <td className="p-4 text-white/70 hidden xl:table-cell">{reg.event_title}</td>
-                        <td className="p-4 text-white/70 hidden lg:table-cell">
-                          {new Date(reg.created_at).toLocaleDateString()}
-                        </td>
+                        <td className="p-4 text-white/70 hidden lg:table-cell">{new Date(reg.created_at).toLocaleDateString()}</td>
                         <td className="p-4">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            reg.payment_status === 'completed' 
-                              ? 'bg-green-500/20 text-green-400' 
-                              : 'bg-yellow-500/20 text-yellow-400'
-                          }`}>
+                          <span className={`px-2 py-1 rounded-full text-xs ${reg.payment_status === 'completed' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
                             {reg.payment_status}
                           </span>
                         </td>
                         <td className="p-4">
-                          <button
-                            onClick={() => deleteRegistration(reg.id, reg.email)}
-                            className="text-red-400 hover:text-red-300 transition-colors p-1 rounded hover:bg-red-500/10"
-                            title="Delete member"
-                          >
+                          <button onClick={() => deleteRegistration(reg.id, reg.email)} className="text-red-400 hover:text-red-300 transition-colors p-1 rounded hover:bg-red-500/10" title="Delete member">
                             <Trash2 size={18} />
                           </button>
                         </td>
