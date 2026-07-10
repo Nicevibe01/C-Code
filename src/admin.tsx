@@ -346,16 +346,30 @@ export default function Admin() {
 
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
-          
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="sm:hidden text-white/60 hover:text-white transition-colors"
-          >
-            {mobileMenuOpen ? <XIcon size={24} /> : <Menu size={24} />}
-          </button>
-
+       <div className="flex justify-between items-center mb-6 sm:mb-8">
+  <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
+  
+  <div className="flex items-center gap-2">
+    <button
+      onClick={() => setShowAddEvent(true)}
+      className="bg-[#F5A623] text-[#0A1628] px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-semibold flex items-center gap-1 sm:gap-2 hover:bg-[#e0951e] transition-colors text-xs sm:text-sm"
+    >
+      <Plus size={14} /> Add
+    </button>
+    <button
+      onClick={() => setShowAddSpeaker(true)}
+      className="bg-[#00B4D8] text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-semibold flex items-center gap-1 sm:gap-2 hover:bg-[#0099b8] transition-colors text-xs sm:text-sm"
+    >
+      <Users size={14} /> Add
+    </button>
+    <button
+      onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+      className="text-white/60 hover:text-white transition-colors p-1"
+    >
+      {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+    </button>
+  </div>
+</div>
           <div className="hidden sm:flex gap-4 items-center flex-wrap">
             <button
               onClick={() => setShowAddEvent(true)}
