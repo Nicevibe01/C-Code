@@ -5,9 +5,12 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
-  },
-  server: {
-    port: 5179,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+        },
+      },
+    },
   },
 })
